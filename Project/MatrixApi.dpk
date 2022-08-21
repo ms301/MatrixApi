@@ -31,6 +31,8 @@ requires
   rtl;
 
 contains
-  MatrixaPi in '..\MatrixaPi.pas';
+  MatrixaPi in '..\MatrixaPi.pas',
+  MatrixaPi.Responses in '..\MatrixaPi.Responses.pas',
+  MatrixaPi.Request in '..\MatrixaPi.Request.pas';
 
 end.
