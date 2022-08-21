@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{30891408-4290-40AF-996D-935B57B680A4}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="..\CloudAPI\CloudAPI.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="MatrixApi.dproj">
+            <Dependencies>..\CloudAPI\CloudAPI.dproj</Dependencies>
+        </Projects>
+        <Projects Include="..\Demo\MatrixDemo.dproj">
+            <Dependencies>MatrixApi.dproj</Dependencies>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="CloudAPI">
+        <MSBuild Projects="..\CloudAPI\CloudAPI.dproj"/>
+    </Target>
+    <Target Name="CloudAPI:Clean">
+        <MSBuild Projects="..\CloudAPI\CloudAPI.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CloudAPI:Make">
+        <MSBuild Projects="..\CloudAPI\CloudAPI.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="MatrixApi" DependsOnTargets="CloudAPI">
+        <MSBuild Projects="MatrixApi.dproj"/>
+    </Target>
+    <Target Name="MatrixApi:Clean" DependsOnTargets="CloudAPI:Clean">
+        <MSBuild Projects="MatrixApi.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MatrixApi:Make" DependsOnTargets="CloudAPI:Make">
+        <MSBuild Projects="MatrixApi.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="MatrixDemo" DependsOnTargets="MatrixApi">
+        <MSBuild Projects="..\Demo\MatrixDemo.dproj"/>
+    </Target>
+    <Target Name="MatrixDemo:Clean" DependsOnTargets="MatrixApi:Clean">
+        <MSBuild Projects="..\Demo\MatrixDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MatrixDemo:Make" DependsOnTargets="MatrixApi:Make">
+        <MSBuild Projects="..\Demo\MatrixDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="CloudAPI;MatrixApi;MatrixDemo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="CloudAPI:Clean;MatrixApi:Clean;MatrixDemo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="CloudAPI:Make;MatrixApi:Make;MatrixDemo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
