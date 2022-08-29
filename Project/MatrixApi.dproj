@@ -103,6 +103,7 @@
         <DCCReference Include="..\MatrixaPi.pas"/>
         <DCCReference Include="..\MatrixaPi.Responses.pas"/>
         <DCCReference Include="..\MatrixaPi.Request.pas"/>
+        <DCCReference Include="..\MatrixaPi.Request.Converters.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

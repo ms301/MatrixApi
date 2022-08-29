@@ -28,10 +28,10 @@ type
 implementation
 
 uses
-
   CloudAPI.RequestArgument,
   CloudAPI.Response,
-  CloudAPI.Types;
+  CloudAPI.Types,
+  MatrixaPi.Request.Converters;
 
 { TMatrixaPi }
 
@@ -68,6 +68,7 @@ begin
   FCloudApi.BaseUrl := '{ApiServer}';
   //
   FApiServer := 'https://matrix-client.matrix.org';
+  TMatrixRequestConverters.Initialize;
 end;
 
 destructor TMatrixaPi.Destroy;

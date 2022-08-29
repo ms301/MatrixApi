@@ -1,3 +1,6 @@
 [submodule "CloudAPI"]
 	path = CloudAPI
 	url = https://github.com/ms301/CloudAPI.git
+[submodule "CloudRest"]
+	path = CloudRest
+	url = https://github.com/rareMaxim/CloudRest.git
