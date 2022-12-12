@@ -16,6 +16,7 @@ type
     FPooling: TMandarinLongPooling;
     FUrl: string;
     FIsSyncMode: Boolean;
+    FAccessToken: string;
   protected
     procedure DoCheckError(AHttpResp: IHTTPResponse);
 
@@ -30,10 +31,12 @@ type
     /// </remarks>
     procedure LoginWithPassword(const AUser, APassword: string; ALoginCallback: TProc<TmtrLogin, IHTTPResponse>);
     procedure ClientVersions(AVersionsCallback: TProc<TmtrVersions, IHTTPResponse>);
+    procedure CreateRoom(ARoomCallback: TProc<string, IHTTPResponse>);
     constructor Create(const AUrl: string = 'https://matrix-client.matrix.org');
     destructor Destroy; override;
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
     property Url: string read FUrl write FUrl;
+    property AccessToken: string read FAccessToken write FAccessToken;
   end;
 
 implementation
@@ -66,6 +69,20 @@ begin
   FIsSyncMode := True;
 end;
 
+procedure TMatrixaPi.CreateRoom(ARoomCallback: TProc<string, IHTTPResponse>);
+begin
+  FCli.NewMandarin<TmtrRoom>(API_ENDPOINT_V_3) //
+    .AddUrlSegment('method', 'createRoom') //
+    .SetRequestMethod(sHTTPMethodPost) //
+    .Execute(
+    procedure(ARoom: TmtrRoom; AResponse: IHTTPResponse)
+    begin
+      if Assigned(ARoomCallback) then
+        ARoomCallback(ARoom.RoomId, AResponse);
+      ARoom.Free;
+    end, FIsSyncMode);
+end;
+
 destructor TMatrixaPi.Destroy;
 begin
   FCli.Free;
@@ -74,9 +91,9 @@ end;
 
 procedure TMatrixaPi.ClientVersions(AVersionsCallback: TProc<TmtrVersions, IHTTPResponse>);
 begin
-  FCli.NewMandarin<TmtrVersions>(API_ENDPOINT_NO_VER)//
-    .AddUrlSegment('method', 'versions')//
-    .SetRequestMethod(sHTTPMethodGet)//
+  FCli.NewMandarin<TmtrVersions>(API_ENDPOINT_NO_VER) //
+    .AddUrlSegment('method', 'versions') //
+    .SetRequestMethod(sHTTPMethodGet) //
     .Execute(AVersionsCallback, FIsSyncMode);
 end;
 
@@ -93,11 +110,10 @@ begin
   LLogin := TmtxLoginRequest.Create(AUser, APassword);
   LLogin.InitialDeviceDisplayName := 'Jungle Phone';
   try
-    FCli.NewMandarin<TmtrLogin>(API_ENDPOINT_V_3)//
-      .SetRequestMethod(sHTTPMethodPost)//
-      .AddUrlSegment('method', 'login')//
-      .AddUrlSegment('v', '3')//
-      .SetBody(LLogin)//
+    FCli.NewMandarin<TmtrLogin>(API_ENDPOINT_V_3) //
+      .SetRequestMethod(sHTTPMethodPost) //
+      .AddUrlSegment('method', 'login') //
+      .SetBody(LLogin) //
       .Execute(ALoginCallback, FIsSyncMode);
   finally
     LLogin.Free;
@@ -107,8 +123,8 @@ end;
 procedure TMatrixaPi.ServerDiscoveryInformation(AWelKnownCallback: TProc<TmtrWelKnown, IHTTPResponse>);
 begin
   raise ENotSupportedException.Create('Unsupported method');
-  FCli.NewMandarin<TmtrWelKnown>(API_ENDPOINT_SERVER + '/.well-known/matrix/client')//
-    .SetRequestMethod(sHTTPMethodGet)//
+  FCli.NewMandarin<TmtrWelKnown>(API_ENDPOINT_SERVER + '/.well-known/matrix/client') //
+    .SetRequestMethod(sHTTPMethodGet) //
     .Execute(AWelKnownCallback, FIsSyncMode);
 end;
 

@@ -85,6 +85,14 @@ type
     property WellKnow: TmtrWelKnown read FWellKnow;
   end;
 
+  TmtrRoom = class
+  private
+    [JsonName('room_id')]
+    FRoomId: string;
+  public
+    property RoomId: string read FRoomId write FRoomId;
+  end;
+
 implementation
 
 end.

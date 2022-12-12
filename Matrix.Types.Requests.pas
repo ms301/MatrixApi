@@ -37,6 +37,21 @@ type
     property &Type: string read FType write FType;
   end;
 
+  TmtxCreateRoomRequest = class
+  private type
+    TVisibility = (public, private);
+  private
+    [JsonName('invite')]
+    FMembers: TArray<string>;
+    [JsonName('visibility')]
+    FVisibility: TVisibility;
+    FRoomAliasName: string;
+  public
+    property Members: TArray<string> read FMembers write FMembers;
+    property Visibility: TVisibility read FVisibility write FVisibility;
+    property RoomAliasName: string read FRoomAliasName write FRoomAliasName;
+  end;
+
 implementation
 
 constructor TmtxLoginRequest.TmtxlIdentifier.Create(const AType, AUser: string);
