@@ -31,7 +31,13 @@ type
     /// </remarks>
     procedure LoginWithPassword(const AUser, APassword: string; ALoginCallback: TProc<TmtrLogin, IHTTPResponse>);
     procedure ClientVersions(AVersionsCallback: TProc<TmtrVersions, IHTTPResponse>);
-    procedure CreateRoom(ARoomCallback: TProc<string, IHTTPResponse>);
+    /// <summary>
+    /// Create a new room
+    /// </summary>
+    /// <remarks>
+    /// Create a new room with various configuration options.
+    /// </remarks>
+    procedure CreateRoom(const AInvitedUserIds: TArray<string>; ARoomCallback: TProc<string, IHTTPResponse>);
     constructor Create(const AUrl: string = 'https://matrix-client.matrix.org');
     destructor Destroy; override;
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
@@ -69,23 +75,41 @@ begin
   FIsSyncMode := True;
 end;
 
-procedure TMatrixaPi.CreateRoom(ARoomCallback: TProc<string, IHTTPResponse>);
+type
+  TSimpleCreateRoom = class
+  private
+    [JsonName('invite')]
+    FMembers: TArray<string>;
+  public
+    property Members: TArray<string> read FMembers write FMembers;
+  end;
+
+procedure TMatrixaPi.CreateRoom(const AInvitedUserIds: TArray<string>; ARoomCallback: TProc<string, IHTTPResponse>);
+var
+  LRoom: TSimpleCreateRoom;
 begin
-  FCli.NewMandarin<TmtrRoom>(API_ENDPOINT_V_3) //
-    .AddUrlSegment('method', 'createRoom') //
-    .SetRequestMethod(sHTTPMethodPost) //
-    .Execute(
-    procedure(ARoom: TmtrRoom; AResponse: IHTTPResponse)
-    begin
-      if Assigned(ARoomCallback) then
-        ARoomCallback(ARoom.RoomId, AResponse);
-      ARoom.Free;
-    end, FIsSyncMode);
+  LRoom := TSimpleCreateRoom.Create;
+  try
+    FCli.NewMandarin<TmtrRoom>(API_ENDPOINT_V_3) //
+      .AddUrlSegment('method', 'createRoom') //
+      .SetRequestMethod(sHTTPMethodPost) //
+      .SetBody(LRoom) //
+      .Execute(
+      procedure(ARoom: TmtrRoom; AResponse: IHTTPResponse)
+      begin
+        if Assigned(ARoomCallback) then
+          ARoomCallback(ARoom.RoomId, AResponse);
+        ARoom.Free;
+      end, FIsSyncMode);
+  finally
+    LRoom.Free;
+  end;
 end;
 
 destructor TMatrixaPi.Destroy;
 begin
   FCli.Free;
+  FPooling.Free;
   inherited Destroy;
 end;
 

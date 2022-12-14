@@ -26,16 +26,28 @@ type
     procedure TestLogin;
     [Test]
     procedure TestVersions;
-    //   [Test] UNSUPPORTED
+    // [Test] UNSUPPORTED
     procedure ServerDiscoveryInformation;
+    [Test]
+    procedure CreateRoom;
   end;
 
 implementation
 
 procedure TMatrixaPiTest.CheckUniversal(AError: TmtrError; AHttpResponse: IHTTPResponse);
 begin
-  Assert.IsEmpty(AError.ErrorCode, AError.Error);
+  if Assigned(AError) then
+    Assert.IsEmpty(AError.ErrorCode, AError.Error);
   Assert.AreEqual(200, AHttpResponse.StatusCode, AHttpResponse.StatusText);
+end;
+
+procedure TMatrixaPiTest.CreateRoom;
+begin
+  FCli.CreateRoom([],
+    procedure(ARoomId: string; AHttp: IHTTPResponse)
+    begin
+      CheckUniversal(nil, AHttp);
+    end);
 end;
 
 procedure TMatrixaPiTest.ServerDiscoveryInformation;
@@ -44,8 +56,8 @@ begin
     procedure(AWelKnown: TmtrWelKnown; AHttpResp: IHTTPResponse)
     begin
       // CheckUniversal(AWelKnown, AHttpResp);
-      //   Assert.AreNotEqual(0, AVersion.UnstableFutures.Count);
-      //   Assert.AreNotEqual(0, Length(AVersion.Versions));
+      // Assert.AreNotEqual(0, AVersion.UnstableFutures.Count);
+      // Assert.AreNotEqual(0, Length(AVersion.Versions));
     end);
 end;
 
