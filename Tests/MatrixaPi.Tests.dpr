@@ -1,28 +1,38 @@
 ﻿program MatrixaPi.Tests;
-
+{$DEFINE FastMM_EnableMemoryLeakReporting}
 {$IFNDEF TESTINSIGHT}
 {$APPTYPE CONSOLE}
 {$ENDIF}
 {$STRONGLINKTYPES ON}
+
 uses
+  FastMM5,
+  // FastMMMemLeakMonitor,
   System.SysUtils,
-  {$IFDEF TESTINSIGHT}
+{$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
-  {$ELSE}
+{$ELSE}
   DUnitX.Loggers.Console,
   DUnitX.Loggers.Xml.NUnit,
-  {$ENDIF }
+{$ENDIF }
   DUnitX.TestFramework,
   Test.Main in 'Test.Main.pas';
 
 {$IFNDEF TESTINSIGHT}
+
 var
   runner: ITestRunner;
   results: IRunResults;
   logger: ITestLogger;
-  nunitLogger : ITestLogger;
+  nunitLogger: ITestLogger;
 {$ENDIF}
+
 begin
+  if FastMM_LoadDebugSupportLibrary then
+  begin
+    FastMM_EnterDebugMode;
+    FastMM_MessageBoxEvents := FastMM_MessageBoxEvents + [mmetUnexpectedMemoryLeakDetail];
+  end;
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
 {$ELSE}
@@ -52,17 +62,18 @@ begin
     if not results.AllPassed then
       System.ExitCode := EXIT_ERRORS;
 
-    {$IFNDEF CI}
+{$IFNDEF CI}
     //We don't want this happening when running under CI.
     if TDUnitX.Options.ExitBehavior = TDUnitXExitBehavior.Pause then
     begin
       System.Write('Done.. press <Enter> key to quit.');
       System.Readln;
     end;
-    {$ENDIF}
+{$ENDIF}
   except
     on E: Exception do
       System.Writeln(E.ClassName, ': ', E.Message);
   end;
 {$ENDIF}
+
 end.

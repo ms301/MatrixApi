@@ -3,9 +3,8 @@
 interface
 
 uses
-  System.Generics.Collections,
   System.Json.Converters,
-  System.Json.Serializers;
+  System.Json.Serializers, System.Generics.Collections;
 
 type
   TmtrError = class
@@ -50,11 +49,13 @@ type
   private
     [JsonName('unstable_features')]
     [JsonConverter(TJsonUnstableFuturesConverter)]
-    FUnstableFutures: TObjectDictionary<string, Boolean>;
+    FUnstableFutures: TDictionary<string, Boolean>;
     [JsonName('versions')]
     FVersions: TArray<string>;
   public
-    property UnstableFutures: TObjectDictionary<string, Boolean> read FUnstableFutures;
+    constructor Create;
+    destructor Destroy; override;
+    property UnstableFutures: TDictionary<string, Boolean> read FUnstableFutures;
     property Versions: TArray<string> read FVersions write FVersions;
   end;
 
@@ -76,6 +77,8 @@ type
     [JsonConverter(TJsonWellKnowConverter)]
     FWellKnow: TmtrWelKnown;
   public
+    constructor Create;
+    destructor Destroy; override;
     property AccessToken: string read FAccessToken write FAccessToken;
     property DeviceId: string read FDeviceId write FDeviceId;
     property ExpiresInMs: Integer read FExpiresInMs write FExpiresInMs;
@@ -94,5 +97,29 @@ type
   end;
 
 implementation
+
+constructor TmtrLogin.Create;
+begin
+  inherited Create;
+  FWellKnow := TmtrWelKnown.Create([doOwnsValues]);
+end;
+
+destructor TmtrLogin.Destroy;
+begin
+  FWellKnow.Free;
+  inherited Destroy;
+end;
+
+constructor TmtrVersions.Create;
+begin
+  inherited Create;
+  FUnstableFutures := TDictionary<string, Boolean>.Create();
+end;
+
+destructor TmtrVersions.Destroy;
+begin
+  FUnstableFutures.Free;
+  inherited Destroy;
+end;
 
 end.

@@ -3,11 +3,14 @@
         <ProjectGuid>{F91F3C93-5FE9-4CEC-9640-FEE67D40528F}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="MatrixaPi.dproj">
+        <Projects Include="Citrus\CitrusCE.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="MatrixaPi.dproj">
+            <Dependencies>Citrus\CitrusCE.dproj</Dependencies>
+        </Projects>
         <Projects Include="Tests\MatrixaPi.Tests.dproj">
-            <Dependencies>MatrixaPi.dproj</Dependencies>
+            <Dependencies>Citrus\CitrusCE.dproj;MatrixaPi.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -17,32 +20,41 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="MatrixaPi">
+    <Target Name="CitrusCE">
+        <MSBuild Projects="Citrus\CitrusCE.dproj"/>
+    </Target>
+    <Target Name="CitrusCE:Clean">
+        <MSBuild Projects="Citrus\CitrusCE.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CitrusCE:Make">
+        <MSBuild Projects="Citrus\CitrusCE.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="MatrixaPi" DependsOnTargets="CitrusCE">
         <MSBuild Projects="MatrixaPi.dproj"/>
     </Target>
-    <Target Name="MatrixaPi:Clean">
+    <Target Name="MatrixaPi:Clean" DependsOnTargets="CitrusCE:Clean">
         <MSBuild Projects="MatrixaPi.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="MatrixaPi:Make">
+    <Target Name="MatrixaPi:Make" DependsOnTargets="CitrusCE:Make">
         <MSBuild Projects="MatrixaPi.dproj" Targets="Make"/>
     </Target>
-    <Target Name="MatrixaPi_Tests" DependsOnTargets="MatrixaPi">
+    <Target Name="MatrixaPi_Tests" DependsOnTargets="CitrusCE;MatrixaPi">
         <MSBuild Projects="Tests\MatrixaPi.Tests.dproj"/>
     </Target>
-    <Target Name="MatrixaPi_Tests:Clean" DependsOnTargets="MatrixaPi:Clean">
+    <Target Name="MatrixaPi_Tests:Clean" DependsOnTargets="CitrusCE:Clean;MatrixaPi:Clean">
         <MSBuild Projects="Tests\MatrixaPi.Tests.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="MatrixaPi_Tests:Make" DependsOnTargets="MatrixaPi:Make">
+    <Target Name="MatrixaPi_Tests:Make" DependsOnTargets="CitrusCE:Make;MatrixaPi:Make">
         <MSBuild Projects="Tests\MatrixaPi.Tests.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="MatrixaPi;MatrixaPi_Tests"/>
+        <CallTarget Targets="CitrusCE;MatrixaPi;MatrixaPi_Tests"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="MatrixaPi:Clean;MatrixaPi_Tests:Clean"/>
+        <CallTarget Targets="CitrusCE:Clean;MatrixaPi:Clean;MatrixaPi_Tests:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="MatrixaPi:Make;MatrixaPi_Tests:Make"/>
+        <CallTarget Targets="CitrusCE:Make;MatrixaPi:Make;MatrixaPi_Tests:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

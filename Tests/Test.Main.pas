@@ -13,6 +13,7 @@ type
   TMatrixaPiTest = class
   strict private
     FCli: TMatrixaPi;
+    FAccessToken: string;
   protected
     procedure CheckUniversal(AError: TmtrError; AHttpResponse: IHTTPResponse);
   public
@@ -20,15 +21,13 @@ type
     procedure Setup;
     [TearDown]
     procedure TearDown;
-    // Sample Methods
-    // Simple single Test
-    [Test]
-    procedure TestLogin;
     [Test]
     procedure TestVersions;
-    // [Test] UNSUPPORTED
+    [Test()]
+    procedure TestLogin;
+    [Test(False)] {    // UNSUPPORTED}
     procedure ServerDiscoveryInformation;
-    [Test]
+    [Test(true)]
     procedure CreateRoom;
   end;
 
@@ -43,6 +42,7 @@ end;
 
 procedure TMatrixaPiTest.CreateRoom;
 begin
+  FCli.Authenticator.AccessToken := FAccessToken;
   FCli.CreateRoom([],
     procedure(ARoomId: string; AHttp: IHTTPResponse)
     begin
@@ -58,6 +58,7 @@ begin
       // CheckUniversal(AWelKnown, AHttpResp);
       // Assert.AreNotEqual(0, AVersion.UnstableFutures.Count);
       // Assert.AreNotEqual(0, Length(AVersion.Versions));
+      AWelKnown.Free;
     end);
 end;
 
@@ -79,6 +80,8 @@ begin
     begin
       CheckUniversal(ALogin, AHttpResp);
       Assert.IsNotEmpty(ALogin.AccessToken);
+      FAccessToken := ALogin.AccessToken;
+      ALogin.Free;
     end);
 end;
 
@@ -90,11 +93,16 @@ begin
       CheckUniversal(AVersion, AHttpResp);
       Assert.AreNotEqual(0, AVersion.UnstableFutures.Count);
       Assert.AreNotEqual(0, Length(AVersion.Versions));
+      AVersion.Free;
     end);
 end;
 
 initialization
 
 TDUnitX.RegisterTestFixture(TMatrixaPiTest);
+
+//finalization
+//
+//IsConsole := False;
 
 end.

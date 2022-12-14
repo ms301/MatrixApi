@@ -4,6 +4,7 @@ interface
 
 uses
   Citrus.Mandarin,
+  Citrus.Authenticator.JWT,
   Matrix.Types.Response,
   System.SysUtils;
 
@@ -13,10 +14,9 @@ type
   TMatrixaPi = class
   private
     FCli: TMandarinClientJson;
-    FPooling: TMandarinLongPooling;
     FUrl: string;
     FIsSyncMode: Boolean;
-    FAccessToken: string;
+    FAuthenticator: TJwtAuthenticator;
   protected
     procedure DoCheckError(AHttpResp: IHTTPResponse);
 
@@ -42,7 +42,7 @@ type
     destructor Destroy; override;
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
     property Url: string read FUrl write FUrl;
-    property AccessToken: string read FAccessToken write FAccessToken;
+    property Authenticator: TJwtAuthenticator read FAuthenticator write FAuthenticator;
   end;
 
 implementation
@@ -60,16 +60,13 @@ const
 constructor TMatrixaPi.Create(const AUrl: string = 'https://matrix-client.matrix.org');
 begin
   inherited Create;
+  FAuthenticator := TJwtAuthenticator.Create;
   FCli := TMandarinClientJson.Create();
+  FCli.Authenticator := FAuthenticator;
   FCli.OnBeforeExcecute := procedure(AMandarin: IMandarin)
     begin
       AMandarin.AddUrlSegment('server', FUrl);
       AMandarin.AddHeader('Content-Type', 'application/json');
-    end;
-  FPooling := TMandarinLongPooling.Create(FCli);
-  FPooling.OnGetMandarinCallback := function(): IMandarin
-    begin
-
     end;
   FUrl := AUrl;
   FIsSyncMode := True;
@@ -108,8 +105,8 @@ end;
 
 destructor TMatrixaPi.Destroy;
 begin
+  FAuthenticator := nil;
   FCli.Free;
-  FPooling.Free;
   inherited Destroy;
 end;
 
