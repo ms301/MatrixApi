@@ -27,11 +27,16 @@ type
     procedure TestLogin;
     [Test(False)] {    // UNSUPPORTED}
     procedure ServerDiscoveryInformation;
-    [Test(true)]
+    [Test(False)]
     procedure CreateRoom;
+    [Test(true)]
+    procedure Sync;
   end;
 
 implementation
+
+uses
+  Matrix.Types.Requests;
 
 procedure TMatrixaPiTest.CheckUniversal(AError: TmtrError; AHttpResponse: IHTTPResponse);
 begin
@@ -41,9 +46,18 @@ begin
 end;
 
 procedure TMatrixaPiTest.CreateRoom;
+var
+  LRoomBuilder: TmtxCreateRoomRequest;
+  LData: string;
 begin
-  FCli.Authenticator.AccessToken := FAccessToken;
-  FCli.CreateRoom([],
+  LRoomBuilder := TmtxCreateRoomRequest.Create;
+  try
+    LRoomBuilder.SetName('Limon room');
+    LData := LRoomBuilder.JsonAsString;
+  finally
+    LRoomBuilder.Free;
+  end;
+  FCli.CreateRoom(LData,
     procedure(ARoomId: string; AHttp: IHTTPResponse)
     begin
       CheckUniversal(nil, AHttp);
@@ -65,6 +79,16 @@ end;
 procedure TMatrixaPiTest.Setup;
 begin
   FCli := TMatrixaPi.Create('https://matrix-client.matrix.org');
+  FCli.Authenticator.AccessToken := FAccessToken;
+end;
+
+procedure TMatrixaPiTest.Sync;
+begin
+  FCli.Sync(
+    procedure(AHttpResp: IHTTPResponse)
+    begin
+      CheckUniversal(nil, AHttpResp);
+    end);
 end;
 
 procedure TMatrixaPiTest.TearDown;

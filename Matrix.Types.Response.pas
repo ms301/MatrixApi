@@ -88,12 +88,85 @@ type
     property WellKnow: TmtrWelKnown read FWellKnow;
   end;
 
-  TmtrRoom = class
+  TmtrRoom = class(TmtrError)
   private
     [JsonName('room_id')]
     FRoomId: string;
   public
     property RoomId: string read FRoomId write FRoomId;
+  end;
+
+  TmtrSyncAccountData = class
+
+  end;
+
+  TmtrSyncRoomsJoinedRoom = class
+
+  end;
+
+  TmtrSyncRoomsInvitedRoom = class
+
+  end;
+
+  TmtrSyncRoomsKnockedRoom = class
+
+  end;
+
+  TmtrSyncRoomsLeftRoom = class
+
+  end;
+
+  TmtrSyncRooms = class
+  private
+    [JsonName('join')]
+    FJoin: TObjectDictionary<string, TmtrSyncRoomsJoinedRoom>;
+    [JsonName('invite')]
+    FInvite: TObjectDictionary<string, TmtrSyncRoomsInvitedRoom>;
+    [JsonName('knock')]
+    FKnock: TObjectDictionary<string, TmtrSyncRoomsKnockedRoom>;
+    [JsonName('leave')]
+    FLeave: TObjectDictionary<string, TmtrSyncRoomsLeftRoom>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    /// <summary>
+    /// The rooms that the user has been invited to, mapped as room ID to room
+    /// information.
+    /// </summary>
+    property Invite: TObjectDictionary<string, TmtrSyncRoomsInvitedRoom> read FInvite write FInvite;
+    /// <remarks>
+    /// The rooms that the user has joined, mapped as room ID to room information.
+    /// </remarks>
+    property Join: TObjectDictionary<string, TmtrSyncRoomsJoinedRoom> read FJoin write FJoin;
+    /// <summary>
+    /// The rooms that the user has knocked upon, mapped as room ID to room information.
+    /// </summary>
+    property Knock: TObjectDictionary<string, TmtrSyncRoomsKnockedRoom> read FKnock write FKnock;
+    /// <summary>
+    /// The rooms that the user has left or been banned from, mapped as room ID to room
+    /// information.
+    /// </summary>
+    property Leave: TObjectDictionary<string, TmtrSyncRoomsLeftRoom> read FLeave write FLeave;
+  end;
+
+  TmtrSync = class(TmtrError)
+  private
+    [JsonName('next_batch')]
+    FNextBatch: string;
+    [JsonName('rooms')]
+    FRooms: TmtrSyncRooms;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    /// <summary>
+    /// Required: The batch token to supply in the since param of the next /sync
+    /// request.
+    /// </summary>
+    property NextBatch: string read FNextBatch write FNextBatch;
+    /// <summary>
+    /// Updates to rooms.
+    /// </summary>
+    property Rooms: TmtrSyncRooms read FRooms write FRooms;
   end;
 
 implementation
@@ -119,6 +192,36 @@ end;
 destructor TmtrVersions.Destroy;
 begin
   FUnstableFutures.Free;
+  inherited Destroy;
+end;
+
+constructor TmtrSync.Create;
+begin
+  inherited Create;
+  FRooms := TmtrSyncRooms.Create();
+end;
+
+destructor TmtrSync.Destroy;
+begin
+  FRooms.Free;
+  inherited Destroy;
+end;
+
+constructor TmtrSyncRooms.Create;
+begin
+  inherited Create;
+  FJoin := TObjectDictionary<string, TmtrSyncRoomsJoinedRoom>.Create([doOwnsValues]);
+  FInvite := TObjectDictionary<string, TmtrSyncRoomsInvitedRoom>.Create([doOwnsValues]);
+  FKnock := TObjectDictionary<string, TmtrSyncRoomsKnockedRoom>.Create([doOwnsValues]);
+  FLeave := TObjectDictionary<string, TmtrSyncRoomsLeftRoom>.Create([doOwnsValues]);
+end;
+
+destructor TmtrSyncRooms.Destroy;
+begin
+  FLeave.Free;
+  FKnock.Free;
+  FInvite.Free;
+  FJoin.Free;
   inherited Destroy;
 end;
 

@@ -3,7 +3,8 @@
 interface
 
 uses
-  System.Json.Serializers;
+  System.JSON,
+  System.JSON.Serializers;
 
 type
   TmtxLoginRequest = class
@@ -39,40 +40,30 @@ type
 
   TmtxCreateRoomRequest = class
   private type
+{$SCOPEDENUMS ON}
     TVisibility = (public, private);
     TPreset = (PrivateChat, PublicChat, TrustedPrivateChat);
+{$SCOPEDENUMS OFF}
   private
-    [JsonName('invite')]
-    FMembers: TArray<string>;
-    [JsonName('visibility')]
-    FVisibility: TVisibility;
-    [JsonName('room_alias_name')]
-    FRoomAliasName: string;
-    [JsonName('name')]
-    FName: string;
-    [JsonName('is_direct')]
-    FIsDirect: Boolean;
-    [JsonName('preset')]
-    FPreset: TPreset;
-    [JsonName('room_version')]
-    FRoomVersion: string;
-    [JsonName('topic')]
-    FTopic: string;
+    FJson: TJSONObject;
   public
-    property Members: TArray<string> read FMembers write FMembers;
+    constructor Create;
+    destructor Destroy; override;
+    function JsonAsString: string;
+    function SetMembers(AMembers: TArray<string>): TmtxCreateRoomRequest;
     /// <remarks>
     /// If this is included, an m.room.name event will be sent into the room to
     /// indicate the name of the room. See Room Events for more information on m.room.
     /// name.
     /// </remarks>
-    property Name: string read FName write FName;
-    property Preset: TPreset read FPreset write FPreset;
+    function SetName(const AName: string): TmtxCreateRoomRequest;
+    function SetPreset(const APreset: TPreset): TmtxCreateRoomRequest;
     /// <remarks>
     /// This flag makes the server set the is_direct flag on the m.room.member events
     /// sent to the users in invite and invite_3pid. See Direct Messaging for more
     /// information.
     /// </remarks>
-    property IsDirect: Boolean read FIsDirect write FIsDirect;
+    function SetIsDirect(const AIsDirect: Boolean): TmtxCreateRoomRequest;
     /// <remarks>
     /// The desired room alias local part. If this is included, a room alias will be
     /// created and mapped to the newly created room. The alias will belong on the same
@@ -82,22 +73,20 @@ type
     /// The complete room alias will become the canonical alias for the room and an m.
     /// room.canonical_alias event will be sent into the room.
     /// </remarks>
-    property RoomAliasName: string read FRoomAliasName write FRoomAliasName;
+    function SetRoomAliasName(const ARoomAliasName: string): TmtxCreateRoomRequest;
     /// <remarks>
     /// The room version to set for the room. If not provided, the homeserver is to use
     /// its configured
     /// </remarks>
-    property RoomVersion: string read FRoomVersion write FRoomVersion;
-    /// <remarks>
-    /// If this is included, an m.room.topic event will be sent into the room to
-    /// indicate the topic for the room. See Room Events for more information on m.room.
-    /// topic.
-    /// </remarks>
-    property Topic: string read FTopic write FTopic;
-    property Visibility: TVisibility read FVisibility write FVisibility;
+    function SetRoomVersion(const ARoomVersion: string): TmtxCreateRoomRequest;
+    function SetTopic(const ATopic: string): TmtxCreateRoomRequest;
+    function SetVisibility(const AVisibility: TVisibility): TmtxCreateRoomRequest;
   end;
 
 implementation
+
+uses
+  System.SysUtils;
 
 constructor TmtxLoginRequest.TmtxlIdentifier.Create(
 
@@ -122,6 +111,89 @@ destructor TmtxLoginRequest.Destroy;
 begin
   FIdentifier.Free;
   inherited Destroy;
+end;
+
+constructor TmtxCreateRoomRequest.Create;
+begin
+  inherited Create;
+  FJson := TJSONObject.Create();
+end;
+
+destructor TmtxCreateRoomRequest.Destroy;
+begin
+  FJson.Free;
+  inherited Destroy;
+end;
+
+function TmtxCreateRoomRequest.JsonAsString: string;
+begin
+  Result := FJson.ToJSON;
+end;
+
+function TmtxCreateRoomRequest.SetIsDirect(const AIsDirect: Boolean): TmtxCreateRoomRequest;
+begin
+  FJson.AddPair('is_direct', TJSONBool.Create(AIsDirect));
+  Result := Self;
+end;
+
+function TmtxCreateRoomRequest.SetMembers(AMembers: TArray<string>): TmtxCreateRoomRequest;
+begin
+  FJson.AddPair('invite', '[' + string.Join(',', AMembers) + ']');
+  Result := Self;
+end;
+
+function TmtxCreateRoomRequest.SetName(const AName: string): TmtxCreateRoomRequest;
+begin
+  FJson.AddPair('name', AName);
+  Result := Self;
+end;
+
+function TmtxCreateRoomRequest.SetPreset(const APreset: TPreset): TmtxCreateRoomRequest;
+var
+  lPreset: string;
+begin
+  case APreset of
+    TPreset.PrivateChat:
+      lPreset := 'private_chat';
+    TPreset.PublicChat:
+      lPreset := 'public_chat';
+    TPreset.TrustedPrivateChat:
+      lPreset := 'trusted_private_chat';
+  end;
+  FJson.AddPair('preset', lPreset);
+  Result := Self;
+end;
+
+function TmtxCreateRoomRequest.SetRoomAliasName(const ARoomAliasName: string): TmtxCreateRoomRequest;
+begin
+  FJson.AddPair('room_alias_name', ARoomAliasName);
+  Result := Self;
+end;
+
+function TmtxCreateRoomRequest.SetRoomVersion(const ARoomVersion: string): TmtxCreateRoomRequest;
+begin
+  FJson.AddPair('room_version', ARoomVersion);
+  Result := Self;
+end;
+
+function TmtxCreateRoomRequest.SetTopic(const ATopic: string): TmtxCreateRoomRequest;
+begin
+  FJson.AddPair('topic', ATopic);
+  Result := Self;
+end;
+
+function TmtxCreateRoomRequest.SetVisibility(const AVisibility: TVisibility): TmtxCreateRoomRequest;
+var
+  LVisibility: string;
+begin
+  case AVisibility of
+    TVisibility.public:
+      LVisibility := 'public';
+    TVisibility.private:
+      LVisibility := 'private';
+  end;
+  FJson.AddPair('visibility', LVisibility);
+  Result := Self;
 end;
 
 end.

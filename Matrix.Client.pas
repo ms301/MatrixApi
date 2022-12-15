@@ -37,7 +37,8 @@ type
     /// <remarks>
     /// Create a new room with various configuration options.
     /// </remarks>
-    procedure CreateRoom(const AInvitedUserIds: TArray<string>; ARoomCallback: TProc<string, IHTTPResponse>);
+    procedure CreateRoom(const AParamJson: string; ARoomCallback: TProc<string, IHTTPResponse>);
+    procedure Sync(ARoomCallback: TProc<IHTTPResponse>);
     constructor Create(const AUrl: string = 'https://matrix-client.matrix.org');
     destructor Destroy; override;
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
@@ -72,35 +73,19 @@ begin
   FIsSyncMode := True;
 end;
 
-type
-  TSimpleCreateRoom = class
-  private
-    [JsonName('invite')]
-    FMembers: TArray<string>;
-  public
-    property Members: TArray<string> read FMembers write FMembers;
-  end;
-
-procedure TMatrixaPi.CreateRoom(const AInvitedUserIds: TArray<string>; ARoomCallback: TProc<string, IHTTPResponse>);
-var
-  LRoom: TSimpleCreateRoom;
+procedure TMatrixaPi.CreateRoom(const AParamJson: string; ARoomCallback: TProc<string, IHTTPResponse>);
 begin
-  LRoom := TSimpleCreateRoom.Create;
-  try
-    FCli.NewMandarin<TmtrRoom>(API_ENDPOINT_V_3) //
-      .AddUrlSegment('method', 'createRoom') //
-      .SetRequestMethod(sHTTPMethodPost) //
-      .SetBody(LRoom) //
-      .Execute(
-      procedure(ARoom: TmtrRoom; AResponse: IHTTPResponse)
-      begin
-        if Assigned(ARoomCallback) then
-          ARoomCallback(ARoom.RoomId, AResponse);
-        ARoom.Free;
-      end, FIsSyncMode);
-  finally
-    LRoom.Free;
-  end;
+  FCli.NewMandarin<TmtrRoom>(API_ENDPOINT_V_3) //
+    .AddUrlSegment('method', 'createRoom') //
+    .SetRequestMethod(sHTTPMethodPost) //
+    .SetBodyRaw(AParamJson) //
+    .Execute(
+    procedure(ARoom: TmtrRoom; AResponse: IHTTPResponse)
+    begin
+      if Assigned(ARoomCallback) then
+        ARoomCallback(ARoom.RoomId, AResponse);
+      ARoom.Free;
+    end, FIsSyncMode);
 end;
 
 destructor TMatrixaPi.Destroy;
@@ -147,6 +132,14 @@ begin
   FCli.NewMandarin<TmtrWelKnown>(API_ENDPOINT_SERVER + '/.well-known/matrix/client') //
     .SetRequestMethod(sHTTPMethodGet) //
     .Execute(AWelKnownCallback, FIsSyncMode);
+end;
+
+procedure TMatrixaPi.Sync(ARoomCallback: TProc<IHTTPResponse>);
+begin
+  FCli.NewMandarin(API_ENDPOINT_V_3) //
+    .AddUrlSegment('method', 'sync ') //
+    .SetRequestMethod(sHTTPMethodGet) //
+    .Execute(ARoomCallback, FIsSyncMode);
 end;
 
 end.
