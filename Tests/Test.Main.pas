@@ -85,9 +85,9 @@ end;
 procedure TMatrixaPiTest.Sync;
 begin
   FCli.Sync(
-    procedure(AHttpResp: IHTTPResponse)
+    procedure(ASync: TmtrSync; AHttpResp: IHTTPResponse)
     begin
-      CheckUniversal(nil, AHttpResp);
+      CheckUniversal(ASync, AHttpResp);
     end);
 end;
 

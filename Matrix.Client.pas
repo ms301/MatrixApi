@@ -38,7 +38,7 @@ type
     /// Create a new room with various configuration options.
     /// </remarks>
     procedure CreateRoom(const AParamJson: string; ARoomCallback: TProc<string, IHTTPResponse>);
-    procedure Sync(ARoomCallback: TProc<IHTTPResponse>);
+    procedure Sync(ARoomCallback: TProc<TmtrSync, IHTTPResponse>);
     constructor Create(const AUrl: string = 'https://matrix-client.matrix.org');
     destructor Destroy; override;
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
@@ -134,9 +134,9 @@ begin
     .Execute(AWelKnownCallback, FIsSyncMode);
 end;
 
-procedure TMatrixaPi.Sync(ARoomCallback: TProc<IHTTPResponse>);
+procedure TMatrixaPi.Sync(ARoomCallback: TProc<TmtrSync, IHTTPResponse>);
 begin
-  FCli.NewMandarin(API_ENDPOINT_V_3) //
+  FCli.NewMandarin<TmtrSync>(API_ENDPOINT_V_3) //
     .AddUrlSegment('method', 'sync ') //
     .SetRequestMethod(sHTTPMethodGet) //
     .Execute(ARoomCallback, FIsSyncMode);

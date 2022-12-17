@@ -4,7 +4,8 @@ interface
 
 uses
   System.Json.Converters,
-  System.Json.Serializers, System.Generics.Collections;
+  System.Json.Serializers,
+  System.Generics.Collections;
 
 type
   TmtrError = class
@@ -96,12 +97,35 @@ type
     property RoomId: string read FRoomId write FRoomId;
   end;
 
+  TmtrRoomEvent = class
+
+  end;
+
+  TmtrTimeline = class
+  private type
+    TJsonEventsConverter = class(TJsonListConverter<TmtrRoomEvent>);
+  private
+    [JsonName('join')]
+    [JsonConverter(TJsonEventsConverter)]
+    FEvents: TObjectList<TmtrRoomEvent>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property Events: TObjectList<TmtrRoomEvent> read FEvents write FEvents;
+  end;
+
   TmtrSyncAccountData = class
 
   end;
 
   TmtrSyncRoomsJoinedRoom = class
-
+  private
+    [JsonName('join')]
+    FTimeLine: TmtrTimeline;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property TimeLine: TmtrTimeline read FTimeLine write FTimeLine;
   end;
 
   TmtrSyncRoomsInvitedRoom = class
@@ -117,14 +141,23 @@ type
   end;
 
   TmtrSyncRooms = class
+  private type
+    TJsonSyncRoomsJoined = class(TJsonStringDictionaryConverter<TmtrSyncRoomsJoinedRoom>);
+    TJsonSyncRoomsInvited = class(TJsonStringDictionaryConverter<TmtrSyncRoomsInvitedRoom>);
+    TJsonSyncRoomsKnocked = class(TJsonStringDictionaryConverter<TmtrSyncRoomsKnockedRoom>);
+    TJsonSyncRoomsLeft = class(TJsonStringDictionaryConverter<TmtrSyncRoomsLeftRoom>);
   private
     [JsonName('join')]
+    [JsonConverter(TJsonSyncRoomsJoined)]
     FJoin: TObjectDictionary<string, TmtrSyncRoomsJoinedRoom>;
     [JsonName('invite')]
+    [JsonConverter(TJsonSyncRoomsInvited)]
     FInvite: TObjectDictionary<string, TmtrSyncRoomsInvitedRoom>;
     [JsonName('knock')]
+    [JsonConverter(TJsonSyncRoomsKnocked)]
     FKnock: TObjectDictionary<string, TmtrSyncRoomsKnockedRoom>;
     [JsonName('leave')]
+    [JsonConverter(TJsonSyncRoomsLeft)]
     FLeave: TObjectDictionary<string, TmtrSyncRoomsLeftRoom>;
   public
     constructor Create;
@@ -222,6 +255,30 @@ begin
   FKnock.Free;
   FInvite.Free;
   FJoin.Free;
+  inherited Destroy;
+end;
+
+constructor TmtrTimeline.Create;
+begin
+  inherited Create;
+  FEvents := TObjectList<TmtrRoomEvent>.Create();
+end;
+
+destructor TmtrTimeline.Destroy;
+begin
+  FEvents.Free;
+  inherited Destroy;
+end;
+
+constructor TmtrSyncRoomsJoinedRoom.Create;
+begin
+  inherited Create;
+  FTimeLine := TmtrTimeline.Create();
+end;
+
+destructor TmtrSyncRoomsJoinedRoom.Destroy;
+begin
+  FTimeLine.Free;
   inherited Destroy;
 end;
 
