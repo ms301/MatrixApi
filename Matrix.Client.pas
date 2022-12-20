@@ -37,8 +37,8 @@ type
     /// <remarks>
     /// Create a new room with various configuration options.
     /// </remarks>
-    procedure CreateRoom(const AParamJson: string; ARoomCallback: TProc<string, IHTTPResponse>);
-    procedure Sync(ARoomCallback: TProc<TmtrSync, IHTTPResponse>);
+    procedure CreateRoom(const AMandarinBuilder: IMandarinBodyBuider; ARoomCallback: TProc<string, IHTTPResponse>);
+    procedure Sync(ASyncBuilder: IMandarinBuider; ARoomCallback: TProc<TmtrSync, IHTTPResponse>);
     constructor Create(const AUrl: string = 'https://matrix-client.matrix.org');
     destructor Destroy; override;
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
@@ -73,12 +73,13 @@ begin
   FIsSyncMode := True;
 end;
 
-procedure TMatrixaPi.CreateRoom(const AParamJson: string; ARoomCallback: TProc<string, IHTTPResponse>);
+procedure TMatrixaPi.CreateRoom(const AMandarinBuilder: IMandarinBodyBuider;
+  ARoomCallback: TProc<string, IHTTPResponse>);
 begin
   FCli.NewMandarin<TmtrRoom>(API_ENDPOINT_V_3) //
     .AddUrlSegment('method', 'createRoom') //
     .SetRequestMethod(sHTTPMethodPost) //
-    .SetBodyRaw(AParamJson) //
+    .SetBodyRaw(AMandarinBuilder.BuildBody) //
     .Execute(
     procedure(ARoom: TmtrRoom; AResponse: IHTTPResponse)
     begin
@@ -134,12 +135,15 @@ begin
     .Execute(AWelKnownCallback, FIsSyncMode);
 end;
 
-procedure TMatrixaPi.Sync(ARoomCallback: TProc<TmtrSync, IHTTPResponse>);
+procedure TMatrixaPi.Sync(ASyncBuilder: IMandarinBuider; ARoomCallback: TProc<TmtrSync, IHTTPResponse>);
+var
+  LMandarin: IMandarin;
 begin
-  FCli.NewMandarin<TmtrSync>(API_ENDPOINT_V_3) //
-    .AddUrlSegment('method', 'sync ') //
-    .SetRequestMethod(sHTTPMethodGet) //
-    .Execute(ARoomCallback, FIsSyncMode);
+  LMandarin := ASyncBuilder.Build;
+  LMandarin.Url := API_ENDPOINT_V_3;
+  LMandarin.AddUrlSegment('method', 'sync ');
+  LMandarin.RequestMethod := sHTTPMethodGet;
+  FCli.Execute<TmtrSync>(LMandarin, ARoomCallback, FIsSyncMode);
 end;
 
 end.

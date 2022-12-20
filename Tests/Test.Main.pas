@@ -27,9 +27,9 @@ type
     procedure TestLogin;
     [Test(False)] {    // UNSUPPORTED}
     procedure ServerDiscoveryInformation;
-    [Test(False)]
+    [Test(TRUE)]
     procedure CreateRoom;
-    [Test(true)]
+    [Test(TRUE)]
     procedure Sync;
   end;
 
@@ -47,21 +47,19 @@ end;
 
 procedure TMatrixaPiTest.CreateRoom;
 var
-  LRoomBuilder: TmtxCreateRoomRequest;
-  LData: string;
+  LRoomBuilder: TmtxCreateRoomBuider;
 begin
-  LRoomBuilder := TmtxCreateRoomRequest.Create;
+  LRoomBuilder := TmtxCreateRoomBuider.Create;
   try
     LRoomBuilder.SetName('Limon room');
-    LData := LRoomBuilder.JsonAsString;
+    FCli.CreateRoom(LRoomBuilder,
+      procedure(ARoomId: string; AHttp: IHTTPResponse)
+      begin
+        CheckUniversal(nil, AHttp);
+      end);
   finally
     LRoomBuilder.Free;
   end;
-  FCli.CreateRoom(LData,
-    procedure(ARoomId: string; AHttp: IHTTPResponse)
-    begin
-      CheckUniversal(nil, AHttp);
-    end);
 end;
 
 procedure TMatrixaPiTest.ServerDiscoveryInformation;
@@ -83,12 +81,22 @@ begin
 end;
 
 procedure TMatrixaPiTest.Sync;
+var
+  LSyncReq: TmtxSyncRequest;
 begin
-  FCli.Sync(
-    procedure(ASync: TmtrSync; AHttpResp: IHTTPResponse)
-    begin
-      CheckUniversal(ASync, AHttpResp);
-    end);
+  LSyncReq := TmtxSyncRequest.Create;
+  try
+    FCli.Sync(LSyncReq,
+      procedure(ASync: TmtrSync; AHttpResp: IHTTPResponse)
+      begin
+        CheckUniversal(ASync, AHttpResp);
+        ASync.Free;
+      end);
+
+  finally
+   // LSyncReq.Free;
+  end;
+
 end;
 
 procedure TMatrixaPiTest.TearDown;

@@ -4,7 +4,8 @@ interface
 
 uses
   System.JSON,
-  System.JSON.Serializers;
+  System.JSON.Serializers,
+  Citrus.Mandarin;
 
 type
   TmtxLoginRequest = class
@@ -38,7 +39,7 @@ type
     property &Type: string read FType write FType;
   end;
 
-  TmtxCreateRoomRequest = class
+  TmtxCreateRoomBuider = class(TInterfacedObject, IMandarinBodyBuider)
   private type
 {$SCOPEDENUMS ON}
     TVisibility = (public, private);
@@ -46,24 +47,25 @@ type
 {$SCOPEDENUMS OFF}
   private
     FJson: TJSONObject;
+    FMandarin: IMandarin;
   public
     constructor Create;
     destructor Destroy; override;
     function JsonAsString: string;
-    function SetMembers(AMembers: TArray<string>): TmtxCreateRoomRequest;
+    function SetMembers(AMembers: TArray<string>): TmtxCreateRoomBuider;
     /// <remarks>
     /// If this is included, an m.room.name event will be sent into the room to
     /// indicate the name of the room. See Room Events for more information on m.room.
     /// name.
     /// </remarks>
-    function SetName(const AName: string): TmtxCreateRoomRequest;
-    function SetPreset(const APreset: TPreset): TmtxCreateRoomRequest;
+    function SetName(const AName: string): TmtxCreateRoomBuider;
+    function SetPreset(const APreset: TPreset): TmtxCreateRoomBuider;
     /// <remarks>
     /// This flag makes the server set the is_direct flag on the m.room.member events
     /// sent to the users in invite and invite_3pid. See Direct Messaging for more
     /// information.
     /// </remarks>
-    function SetIsDirect(const AIsDirect: Boolean): TmtxCreateRoomRequest;
+    function SetIsDirect(const AIsDirect: Boolean): TmtxCreateRoomBuider;
     /// <remarks>
     /// The desired room alias local part. If this is included, a room alias will be
     /// created and mapped to the newly created room. The alias will belong on the same
@@ -73,14 +75,32 @@ type
     /// The complete room alias will become the canonical alias for the room and an m.
     /// room.canonical_alias event will be sent into the room.
     /// </remarks>
-    function SetRoomAliasName(const ARoomAliasName: string): TmtxCreateRoomRequest;
+    function SetRoomAliasName(const ARoomAliasName: string): TmtxCreateRoomBuider;
     /// <remarks>
     /// The room version to set for the room. If not provided, the homeserver is to use
     /// its configured
     /// </remarks>
-    function SetRoomVersion(const ARoomVersion: string): TmtxCreateRoomRequest;
-    function SetTopic(const ATopic: string): TmtxCreateRoomRequest;
-    function SetVisibility(const AVisibility: TVisibility): TmtxCreateRoomRequest;
+    function SetRoomVersion(const ARoomVersion: string): TmtxCreateRoomBuider;
+    function SetTopic(const ATopic: string): TmtxCreateRoomBuider;
+    function SetVisibility(const AVisibility: TVisibility): TmtxCreateRoomBuider;
+    function BuildBody: string;
+  end;
+
+  TmtxSyncRequest = class(TInterfacedObject, IMandarinBuider)
+  public type
+{$SCOPEDENUMS ON}
+    TPresence = (Fffline, Fnline, Unavailable);
+{$SCOPEDENUMS OFF}
+  private
+    FMandarin: IMandarin;
+  public
+    constructor Create;
+    function SetFilter(const AFilter: string): TmtxSyncRequest;
+    function SetFullState(const AFullState: Boolean): TmtxSyncRequest;
+    function SetPresence(const APresence: TPresence): TmtxSyncRequest;
+    function SetSince(const ASince: string): TmtxSyncRequest;
+    function SetTimeout(const ATimeout: Integer): TmtxSyncRequest;
+    function Build: IMandarin;
   end;
 
 implementation
@@ -113,42 +133,48 @@ begin
   inherited Destroy;
 end;
 
-constructor TmtxCreateRoomRequest.Create;
+function TmtxCreateRoomBuider.BuildBody: string;
+begin
+  Result := FJson.ToJSON;
+end;
+
+constructor TmtxCreateRoomBuider.Create;
 begin
   inherited Create;
+  FMandarin := TMandarin.Create;
   FJson := TJSONObject.Create();
 end;
 
-destructor TmtxCreateRoomRequest.Destroy;
+destructor TmtxCreateRoomBuider.Destroy;
 begin
   FJson.Free;
   inherited Destroy;
 end;
 
-function TmtxCreateRoomRequest.JsonAsString: string;
+function TmtxCreateRoomBuider.JsonAsString: string;
 begin
   Result := FJson.ToJSON;
 end;
 
-function TmtxCreateRoomRequest.SetIsDirect(const AIsDirect: Boolean): TmtxCreateRoomRequest;
+function TmtxCreateRoomBuider.SetIsDirect(const AIsDirect: Boolean): TmtxCreateRoomBuider;
 begin
   FJson.AddPair('is_direct', TJSONBool.Create(AIsDirect));
   Result := Self;
 end;
 
-function TmtxCreateRoomRequest.SetMembers(AMembers: TArray<string>): TmtxCreateRoomRequest;
+function TmtxCreateRoomBuider.SetMembers(AMembers: TArray<string>): TmtxCreateRoomBuider;
 begin
   FJson.AddPair('invite', '[' + string.Join(',', AMembers) + ']');
   Result := Self;
 end;
 
-function TmtxCreateRoomRequest.SetName(const AName: string): TmtxCreateRoomRequest;
+function TmtxCreateRoomBuider.SetName(const AName: string): TmtxCreateRoomBuider;
 begin
   FJson.AddPair('name', AName);
   Result := Self;
 end;
 
-function TmtxCreateRoomRequest.SetPreset(const APreset: TPreset): TmtxCreateRoomRequest;
+function TmtxCreateRoomBuider.SetPreset(const APreset: TPreset): TmtxCreateRoomBuider;
 var
   lPreset: string;
 begin
@@ -164,25 +190,25 @@ begin
   Result := Self;
 end;
 
-function TmtxCreateRoomRequest.SetRoomAliasName(const ARoomAliasName: string): TmtxCreateRoomRequest;
+function TmtxCreateRoomBuider.SetRoomAliasName(const ARoomAliasName: string): TmtxCreateRoomBuider;
 begin
   FJson.AddPair('room_alias_name', ARoomAliasName);
   Result := Self;
 end;
 
-function TmtxCreateRoomRequest.SetRoomVersion(const ARoomVersion: string): TmtxCreateRoomRequest;
+function TmtxCreateRoomBuider.SetRoomVersion(const ARoomVersion: string): TmtxCreateRoomBuider;
 begin
   FJson.AddPair('room_version', ARoomVersion);
   Result := Self;
 end;
 
-function TmtxCreateRoomRequest.SetTopic(const ATopic: string): TmtxCreateRoomRequest;
+function TmtxCreateRoomBuider.SetTopic(const ATopic: string): TmtxCreateRoomBuider;
 begin
   FJson.AddPair('topic', ATopic);
   Result := Self;
 end;
 
-function TmtxCreateRoomRequest.SetVisibility(const AVisibility: TVisibility): TmtxCreateRoomRequest;
+function TmtxCreateRoomBuider.SetVisibility(const AVisibility: TVisibility): TmtxCreateRoomBuider;
 var
   LVisibility: string;
 begin
@@ -193,6 +219,52 @@ begin
       LVisibility := 'private';
   end;
   FJson.AddPair('visibility', LVisibility);
+  Result := Self;
+end;
+
+function TmtxSyncRequest.Build: IMandarin;
+begin
+  Result := FMandarin;
+end;
+
+constructor TmtxSyncRequest.Create;
+begin
+  inherited Create;
+  FMandarin := TMandarin.Create();
+end;
+
+{ TmtxSyncRequest }
+
+function TmtxSyncRequest.SetFilter(const AFilter: string): TmtxSyncRequest;
+begin
+  FMandarin.AddQueryParameter('filter', AFilter);
+  Result := Self;
+end;
+
+function TmtxSyncRequest.SetFullState(const AFullState: Boolean): TmtxSyncRequest;
+begin
+  FMandarin.AddQueryParameter('full_state', AFullState.ToString(TUseBoolStrs.True));
+  Result := Self;
+end;
+
+function TmtxSyncRequest.SetPresence(const APresence: TPresence): TmtxSyncRequest;
+var
+  CPresence: TArray<string>;
+begin
+  CPresence := ['offline', 'online', 'unavailable'];
+  FMandarin.AddQueryParameter('set_presence', CPresence[Ord(APresence)]);
+  Result := Self;
+end;
+
+function TmtxSyncRequest.SetSince(const ASince: string): TmtxSyncRequest;
+begin
+  FMandarin.AddQueryParameter('since', ASince);
+  Result := Self;
+end;
+
+function TmtxSyncRequest.SetTimeout(const ATimeout: Integer): TmtxSyncRequest;
+begin
+  FMandarin.AddQueryParameter('timeout', ATimeout.ToString);
   Result := Self;
 end;
 
