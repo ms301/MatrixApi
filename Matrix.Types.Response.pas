@@ -202,8 +202,36 @@ type
     property Rooms: TmtrSyncRooms read FRooms write FRooms;
   end;
 
+  TmtrPublicRooms = class(TmtrError)
+  type
+    TRoom = class
+    private
+      [JsonName('avatar_url')]
+      FAvatarUrl: string;
+    public
+      property AvatarUrl: string read FAvatarUrl write FAvatarUrl;
+    end;
+
+    TChunkConverter = class(TJsonListConverter<TmtrPublicRooms.TRoom>);
+  private
+    [JsonName('next_batch')]
+    FNextBatch: string;
+    [JsonName('total_room_count_estimate')]
+    FTotalRoomCountEstimate: Integer;
+    [JsonName('chunk')]
+    [JsonConverter(TChunkConverter)]
+    FChunk: TObjectList<TmtrPublicRooms.TRoom>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property NextBatch: string read FNextBatch write FNextBatch;
+    property TotalRoomCountEstimate: Integer read FTotalRoomCountEstimate write FTotalRoomCountEstimate;
+    property Chunk: TObjectList<TmtrPublicRooms.TRoom> read FChunk write FChunk;
+  end;
+
 implementation
 
+{TmtrLogin}
 constructor TmtrLogin.Create;
 begin
   inherited Create;
@@ -216,6 +244,7 @@ begin
   inherited Destroy;
 end;
 
+{TmtrVersions}
 constructor TmtrVersions.Create;
 begin
   inherited Create;
@@ -228,6 +257,7 @@ begin
   inherited Destroy;
 end;
 
+{TmtrSync}
 constructor TmtrSync.Create;
 begin
   inherited Create;
@@ -240,6 +270,7 @@ begin
   inherited Destroy;
 end;
 
+{TmtrSyncRooms}
 constructor TmtrSyncRooms.Create;
 begin
   inherited Create;
@@ -258,6 +289,7 @@ begin
   inherited Destroy;
 end;
 
+{TmtrTimeline}
 constructor TmtrTimeline.Create;
 begin
   inherited Create;
@@ -270,6 +302,7 @@ begin
   inherited Destroy;
 end;
 
+{TmtrSyncRoomsJoinedRoom}
 constructor TmtrSyncRoomsJoinedRoom.Create;
 begin
   inherited Create;
@@ -279,6 +312,19 @@ end;
 destructor TmtrSyncRoomsJoinedRoom.Destroy;
 begin
   FTimeLine.Free;
+  inherited Destroy;
+end;
+
+{TmtrPublicRooms}
+constructor TmtrPublicRooms.Create;
+begin
+  inherited Create;
+  FChunk := TObjectList<TmtrPublicRooms.TRoom>.Create();
+end;
+
+destructor TmtrPublicRooms.Destroy;
+begin
+  FChunk.Free;
   inherited Destroy;
 end;
 

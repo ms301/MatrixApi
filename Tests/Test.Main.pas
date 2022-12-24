@@ -21,21 +21,24 @@ type
     procedure Setup;
     [TearDown]
     procedure TearDown;
-    [Test]
+    [Test(False)]
     procedure TestVersions;
-    [Test()]
+    [Test(False)]
     procedure TestLogin;
     [Test(False)] {    // UNSUPPORTED}
     procedure ServerDiscoveryInformation;
-    [Test(TRUE)]
+    [Test(False)]
     procedure CreateRoom;
-    [Test(TRUE)]
+    [Test(False)]
     procedure Sync;
+    [Test(True)]
+    procedure PublicRooms;
   end;
 
 implementation
 
 uses
+  Citrus.Mandarin,
   Matrix.Types.Requests;
 
 procedure TMatrixaPiTest.CheckUniversal(AError: TmtrError; AHttpResponse: IHTTPResponse);
@@ -60,6 +63,20 @@ begin
   finally
     LRoomBuilder.Free;
   end;
+end;
+
+procedure TMatrixaPiTest.PublicRooms;
+var
+  LPublicRooms: IMandarinBuider;
+begin
+  LPublicRooms := TmtxPublicRoomRequest.Create//
+    .SetLimit(50);
+  FCli.PublicRooms(LPublicRooms,
+    procedure(ARooms: TmtrPublicRooms; AHttp: IHTTPResponse)
+    begin
+      CheckUniversal(ARooms, AHttp);
+      Assert.AreNotEqual(0, ARooms.TotalRoomCountEstimate);
+    end);
 end;
 
 procedure TMatrixaPiTest.ServerDiscoveryInformation;
@@ -94,7 +111,7 @@ begin
       end);
 
   finally
-   // LSyncReq.Free;
+    // LSyncReq.Free;
   end;
 
 end;

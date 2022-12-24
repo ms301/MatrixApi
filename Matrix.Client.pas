@@ -21,7 +21,18 @@ type
     procedure DoCheckError(AHttpResp: IHTTPResponse);
 
   public
+
     procedure ServerDiscoveryInformation(AWelKnownCallback: TProc<TmtrWelKnown, IHTTPResponse>);
+    /// <summary>
+    /// Lists the public rooms on the server, with optional filter.
+    /// </summary>
+    /// <remarks>
+    /// This API returns paginated responses. The rooms are ordered by the number of
+    /// joined members, with the largest rooms first.
+    /// </remarks>
+    procedure PublicRooms(APublicRoomBuilder: IMandarinBuider;
+      APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>);
+
     /// <summary>
     /// Authenticates the user.
     /// </summary>
@@ -127,6 +138,18 @@ begin
   end;
 end;
 
+procedure TMatrixaPi.PublicRooms(APublicRoomBuilder: IMandarinBuider;
+APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>);
+var
+  LMandarin: IMandarin;
+begin
+  LMandarin := APublicRoomBuilder.Build;
+  LMandarin.Url := API_ENDPOINT_V_3;
+  LMandarin.AddUrlSegment('method', 'publicRooms');
+  LMandarin.RequestMethod := sHTTPMethodGet;
+  FCli.Execute<TmtrPublicRooms>(LMandarin, APublicRoomsCallback, FIsSyncMode);
+end;
+
 procedure TMatrixaPi.ServerDiscoveryInformation(AWelKnownCallback: TProc<TmtrWelKnown, IHTTPResponse>);
 begin
   raise ENotSupportedException.Create('Unsupported method');
@@ -141,7 +164,7 @@ var
 begin
   LMandarin := ASyncBuilder.Build;
   LMandarin.Url := API_ENDPOINT_V_3;
-  LMandarin.AddUrlSegment('method', 'sync ');
+  LMandarin.AddUrlSegment('method', 'sync');
   LMandarin.RequestMethod := sHTTPMethodGet;
   FCli.Execute<TmtrSync>(LMandarin, ARoomCallback, FIsSyncMode);
 end;
