@@ -66,12 +66,9 @@ begin
 end;
 
 procedure TMatrixaPiTest.PublicRooms;
-var
-  LPublicRooms: IMandarinBuider;
+
 begin
-  LPublicRooms := TmtxPublicRoomRequest.Create//
-    .SetLimit(50);
-  FCli.PublicRooms(LPublicRooms,
+  FCli.PublicRooms(
     procedure(ARooms: TmtrPublicRooms; AHttp: IHTTPResponse)
     begin
       CheckUniversal(ARooms, AHttp);

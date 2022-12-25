@@ -23,6 +23,8 @@ type
   public
 
     procedure ServerDiscoveryInformation(AWelKnownCallback: TProc<TmtrWelKnown, IHTTPResponse>);
+    procedure PublicRooms(APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>; const ALimit: Integer = 25;
+      const ASince: string = ''; const AServer: string = ''); overload;
     /// <summary>
     /// Lists the public rooms on the server, with optional filter.
     /// </summary>
@@ -30,8 +32,8 @@ type
     /// This API returns paginated responses. The rooms are ordered by the number of
     /// joined members, with the largest rooms first.
     /// </remarks>
-    procedure PublicRooms(APublicRoomBuilder: IMandarinBuider;
-      APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>);
+    procedure PublicRooms(APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>;
+      APublicRoomBuilder: IMandarinBuider); overload;
 
     /// <summary>
     /// Authenticates the user.
@@ -138,15 +140,32 @@ begin
   end;
 end;
 
-procedure TMatrixaPi.PublicRooms(APublicRoomBuilder: IMandarinBuider;
-APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>);
+procedure TMatrixaPi.PublicRooms(APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>;
+const ALimit: Integer = 25; const ASince: string = ''; const AServer: string = '');
+var
+  LMandarin: IMandarin;
+begin
+  LMandarin := FCli.NewMandarin(API_ENDPOINT_V_3);
+  LMandarin.AddUrlSegment('method', 'publicRooms');
+  LMandarin.RequestMethod := sHTTPMethodGet;
+  if ALimit > 0 then
+    LMandarin.AddQueryParameter('limit', ALimit.ToString);
+  if not ASince.IsEmpty then
+    LMandarin.AddQueryParameter('server', ASince);
+  if not AServer.IsEmpty then
+    LMandarin.AddQueryParameter('since', AServer);
+  FCli.Execute<TmtrPublicRooms>(LMandarin, APublicRoomsCallback, FIsSyncMode);
+end;
+
+procedure TMatrixaPi.PublicRooms(APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>;
+APublicRoomBuilder: IMandarinBuider);
 var
   LMandarin: IMandarin;
 begin
   LMandarin := APublicRoomBuilder.Build;
   LMandarin.Url := API_ENDPOINT_V_3;
   LMandarin.AddUrlSegment('method', 'publicRooms');
-  LMandarin.RequestMethod := sHTTPMethodGet;
+  LMandarin.RequestMethod := 'POST';
   FCli.Execute<TmtrPublicRooms>(LMandarin, APublicRoomsCallback, FIsSyncMode);
 end;
 

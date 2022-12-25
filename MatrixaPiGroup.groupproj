@@ -12,9 +12,6 @@
         <Projects Include="Tests\MatrixaPi.Tests.dproj">
             <Dependencies>Citrus\CitrusCE.dproj;MatrixaPi.dproj</Dependencies>
         </Projects>
-        <Projects Include="ClientUI\ClientUI.dproj">
-            <Dependencies/>
-        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -50,23 +47,14 @@
     <Target Name="MatrixaPi_Tests:Make" DependsOnTargets="CitrusCE:Make;MatrixaPi:Make">
         <MSBuild Projects="Tests\MatrixaPi.Tests.dproj" Targets="Make"/>
     </Target>
-    <Target Name="ClientUI">
-        <MSBuild Projects="ClientUI\ClientUI.dproj"/>
-    </Target>
-    <Target Name="ClientUI:Clean">
-        <MSBuild Projects="ClientUI\ClientUI.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="ClientUI:Make">
-        <MSBuild Projects="ClientUI\ClientUI.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="CitrusCE;MatrixaPi;MatrixaPi_Tests;ClientUI"/>
+        <CallTarget Targets="CitrusCE;MatrixaPi;MatrixaPi_Tests"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CitrusCE:Clean;MatrixaPi:Clean;MatrixaPi_Tests:Clean;ClientUI:Clean"/>
+        <CallTarget Targets="CitrusCE:Clean;MatrixaPi:Clean;MatrixaPi_Tests:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CitrusCE:Make;MatrixaPi:Make;MatrixaPi_Tests:Make;ClientUI:Make"/>
+        <CallTarget Targets="CitrusCE:Make;MatrixaPi:Make;MatrixaPi_Tests:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
