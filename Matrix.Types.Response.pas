@@ -293,7 +293,7 @@ type
     /// A pagination token for the response. The absence of this token means there are
     /// no more results to fetch and the client should stop paginating.
     /// </summary>
-    property NextBшatch: string read FNextBatch write FNextBatch;
+    property NextBatch: string read FNextBatch write FNextBatch;
     /// <summary>
     /// A pagination token that allows fetching previous results. The absence of this
     /// token means there are no results before this batch, i.e. this is the first
@@ -303,7 +303,7 @@ type
     /// <summary>
     /// An estimate on the total number of public rooms, if the server has an estimate.
     /// </summary>
-    property TotalшRoomCountEstimate: Integer read FTotalRoomCountEstimate write FTotalRoomCountEstimate;
+    property TotalRoomCountEstimate: Integer read FTotalRoomCountEstimate write FTotalRoomCountEstimate;
     property Chunk: TObjectList<TmtrPublicRooms.TRoom> read FChunk write FChunk;
   end;
 
