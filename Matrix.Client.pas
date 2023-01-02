@@ -5,6 +5,7 @@ interface
 uses
   Citrus.Mandarin,
   Citrus.Authenticator.JWT,
+  FMX.Types,
   Matrix.Types.Response,
   System.SysUtils;
 
@@ -17,11 +18,15 @@ type
     FUrl: string;
     FIsSyncMode: Boolean;
     FAuthenticator: TJwtAuthenticator;
+    FNextBatchSync: string;
+    FIsPoolingOn: Boolean;
+    procedure SetIsPoolingOn(const Value: Boolean);
   protected
     procedure DoCheckError(AHttpResp: IHTTPResponse);
-
+    procedure RunSync(const ANext: string);
   public
-
+    procedure Start;
+    procedure Stop;
     procedure ServerDiscoveryInformation(AWelKnownCallback: TProc<TmtrWelKnown, IHTTPResponse>);
     procedure PublicRooms(APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>; const ALimit: Integer = 25;
       const ASince: string = ''; const AServer: string = ''); overload;
@@ -57,13 +62,14 @@ type
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
     property Url: string read FUrl write FUrl;
     property Authenticator: TJwtAuthenticator read FAuthenticator write FAuthenticator;
+    property IsPoolingOn: Boolean read FIsPoolingOn write SetIsPoolingOn;
   end;
 
 implementation
 
 uses
   Matrix.Types.Requests,
-  System.Net.HttpClient;
+  System.Net.HttpClient, System.Classes;
 
 const
   API_ENDPOINT_SERVER = '{server}';
@@ -169,12 +175,53 @@ begin
   FCli.Execute<TmtrPublicRooms>(LMandarin, APublicRoomsCallback, FIsSyncMode);
 end;
 
+procedure TMatrixaPi.RunSync(const ANext: string);
+var
+  LSyncReq: TmtxSyncRequest;
+begin
+  LSyncReq := TmtxSyncRequest.Create;
+  if not ANext.IsEmpty then
+  begin
+    LSyncReq.SetSince(FNextBatchSync);
+    LSyncReq.SetTimeout(5 * 1000);
+  end;
+  try
+    Sync(LSyncReq,
+      procedure(ASync: TmtrSync; AHttpResp: IHTTPResponse)
+      begin
+        FNextBatchSync := ASync.NextBatch;
+        ASync.Free;
+        Stop;
+      end);
+
+  finally
+    // LSyncReq.Free;
+  end;
+
+end;
+
 procedure TMatrixaPi.ServerDiscoveryInformation(AWelKnownCallback: TProc<TmtrWelKnown, IHTTPResponse>);
 begin
   raise ENotSupportedException.Create('Unsupported method');
   FCli.NewMandarin<TmtrWelKnown>(API_ENDPOINT_SERVER + '/.well-known/matrix/client') //
     .SetRequestMethod(sHTTPMethodGet) //
     .Execute(AWelKnownCallback, FIsSyncMode);
+end;
+
+procedure TMatrixaPi.SetIsPoolingOn(const Value: Boolean);
+begin
+  FIsPoolingOn := Value;
+  RunSync(FNextBatchSync);
+end;
+
+procedure TMatrixaPi.Start;
+begin
+  IsPoolingOn := True;
+end;
+
+procedure TMatrixaPi.Stop;
+begin
+
 end;
 
 procedure TMatrixaPi.Sync(ASyncBuilder: IMandarinBuider; ARoomCallback: TProc<TmtrSync, IHTTPResponse>);

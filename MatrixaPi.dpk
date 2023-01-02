@@ -28,7 +28,8 @@
 {$IMPLICITBUILD ON}
 
 requires
-  rtl;
+  rtl,
+  fmx;
 
 contains
   Matrix.Client in 'Matrix.Client.pas',

@@ -100,6 +100,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="Matrix.Client.pas"/>
         <DCCReference Include="Matrix.Types.Response.pas"/>
         <DCCReference Include="Matrix.Types.Requests.pas"/>
