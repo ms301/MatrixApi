@@ -182,6 +182,9 @@ type
     property Leave: TObjectDictionary<string, TmtrSyncRoomsLeftRoom> read FLeave write FLeave;
   end;
 
+  /// <summary>
+  ///     Synchronization response.
+  /// </summary>
   TmtrSync = class(TmtrError)
   private
     [JsonName('next_batch')]
@@ -307,6 +310,59 @@ type
     property Chunk: TObjectList<TmtrPublicRooms.TRoom> read FChunk write FChunk;
   end;
 
+  /// <summary>
+  /// Gets the homeserver’s supported login types to authenticate users. Clients
+  /// should pick one of these and supply it as the type when logging in.
+  /// </summary>
+  TmtrLoginFlows = class(TmtrError)
+  type
+    TIdentityProviders = class
+    private
+      [JsonName('brand')]
+      FBrand: string;
+      [JsonName('icon')]
+      FIcon: string;
+      [JsonName('id')]
+      FID: string;
+      [JsonName('name')]
+      FName: string;
+    public
+      property Brand: string read FBrand write FBrand;
+      property Icon: string read FIcon write FIcon;
+      property ID: string read FID write FID;
+      property Name: string read FName write FName;
+    end;
+
+    TLoginFlow = class
+    private
+      [JsonName('type')]
+      FType: string;
+      [JsonName('identity_providers')]
+      FIdentityProviders: TArray<TIdentityProviders>;
+    public
+
+      constructor Create;
+      destructor Destroy; override;
+      /// <summary>
+      /// The login type. This is supplied as the type when logging in.
+      /// </summary>
+      property &Type: string read FType write FType;
+      property IdentityProviders: TArray<TIdentityProviders> read FIdentityProviders write FIdentityProviders;
+    end;
+  private
+    [JsonName('flows')]
+    FFlows: TArray<TLoginFlow>;
+  public
+
+    constructor Create;
+    destructor Destroy; override;
+
+    /// <summary>
+    /// The homeserver’s supported login types
+    /// </summary>
+    property Flows: TArray<TLoginFlow> read FFlows write FFlows;
+  end;
+
 implementation
 
 {TmtrLogin}
@@ -404,6 +460,34 @@ destructor TmtrPublicRooms.Destroy;
 begin
   FChunk.Free;
   inherited Destroy;
+end;
+
+constructor TmtrLoginFlows.Create;
+begin
+  inherited;
+  FFlows := nil;
+end;
+
+destructor TmtrLoginFlows.Destroy;
+begin
+  for var I := Low(FFlows) to High(FFlows) do
+    FFlows[I].Free;
+  FFlows := nil;
+  inherited;
+end;
+
+constructor TmtrLoginFlows.TLoginFlow.Create;
+begin
+  inherited;
+  FIdentityProviders := nil;
+end;
+
+destructor TmtrLoginFlows.TLoginFlow.Destroy;
+begin
+  for var I := Low(FIdentityProviders) to High(FIdentityProviders) do
+    FIdentityProviders[I].Free;
+  FIdentityProviders := nil;
+  inherited;
 end;
 
 end.

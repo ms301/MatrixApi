@@ -25,6 +25,10 @@ type
     procedure DoCheckError(AHttpResp: IHTTPResponse);
     procedure RunSync(const ANext: string);
   public
+    /// <summary> Gets the homeserver’s supported login types to authenticate users.
+    /// Clients should pick one of these and supply it as the type when logging in.
+    /// </summary>
+    procedure LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
     procedure Start;
     procedure Stop;
     procedure ServerDiscoveryInformation(AWelKnownCallback: TProc<TmtrWelKnown, IHTTPResponse>);
@@ -129,6 +133,14 @@ begin
     Exit;
 end;
 
+procedure TMatrixaPi.LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
+begin
+  FCli.NewMandarin<TmtrLoginFlows>(API_ENDPOINT_V_3) //
+    .SetRequestMethod(sHTTPMethodGet) //
+    .AddUrlSegment('method', 'login') //
+    .Execute(AFlowsCallback, FIsSyncMode);
+end;
+
 procedure TMatrixaPi.LoginWithPassword(const AUser, APassword: string; ALoginCallback: TProc<TmtrLogin, IHTTPResponse>);
 var
   LLogin: TmtxLoginRequest;
@@ -180,18 +192,29 @@ var
   LSyncReq: TmtxSyncRequest;
 begin
   LSyncReq := TmtxSyncRequest.Create;
+
+  LSyncReq.SetTimeout(20 * 1000);
   if not ANext.IsEmpty then
   begin
     LSyncReq.SetSince(FNextBatchSync);
-    LSyncReq.SetTimeout(5 * 1000);
-  end;
+  end
+  else
+    LSyncReq.SetFilter('{"room":{"timeline":{"limit":100,"lazy_load_members":true,"types":' +
+      '["m.room.third_party_invite","m.room.redaction","m.room.message","m.room.member",' +
+      '"m.room.name","m.room.avatar","m.room.canonical_alias","m.room.join_rules",' +
+      '"m.room.power_levels","m.room.topic","m.room.encrypted","m.room.create"]},' +
+      '"state":{"lazy_load_members":true,"types":["m.room.member","m.room.name",' +
+      '"m.room.avatar","m.room.canonical_alias","m.room.join_rules","m.room.power_levels",' +
+      '"m.room.topic","m.room.create"]},"ephemeral":{"lazy_load_members":true,' +
+      '"types":["m.receipt"]},"include_leave":true,"account_data":{"limit":0,"types":[]}},' +
+      '"account_data":{"types":["m.direct"]},"presence":{"types":["m.presence"]}}');
   try
     Sync(LSyncReq,
       procedure(ASync: TmtrSync; AHttpResp: IHTTPResponse)
       begin
         FNextBatchSync := ASync.NextBatch;
         ASync.Free;
-        Stop;
+        RunSync(ASync.NextBatch);
       end);
 
   finally
