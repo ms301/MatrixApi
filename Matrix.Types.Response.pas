@@ -3,9 +3,11 @@
 interface
 
 uses
+  Citrus.Json.Converters,
   System.Json.Converters,
   System.Json.Serializers,
-  System.Generics.Collections;
+  System.Generics.Collections,
+  System.Json;
 
 type
   TmtrError = class
@@ -98,14 +100,31 @@ type
   end;
 
   TmtrRoomEvent = class
-
+  private
+    [JsonName('event_id')]
+    FEventId: string;
+    [JsonName('sender')]
+    FSender: string;
+    [JsonName('content')]
+    [JsonConverter(TJsonToJsonObjectConverter)]
+    FContent: TJSONObject;
+    [JsonName('origin_server_ts')]
+    FOriginServerTimestamp: Int64;
+    [JsonName('type')]
+    FEventType: string;
+  public
+    property Content: TJSONObject read FContent write FContent;
+    property OriginServerTimestamp: Int64 read FOriginServerTimestamp write FOriginServerTimestamp;
+    property Sender: string read FSender write FSender;
+    property EventId: string read FEventId write FEventId;
+    property EventType: string read FEventType write FEventType;
   end;
 
   TmtrTimeline = class
   private type
     TJsonEventsConverter = class(TJsonListConverter<TmtrRoomEvent>);
   private
-    [JsonName('join')]
+    [JsonName('events')]
     [JsonConverter(TJsonEventsConverter)]
     FEvents: TObjectList<TmtrRoomEvent>;
   public
@@ -120,7 +139,7 @@ type
 
   TmtrSyncRoomsJoinedRoom = class
   private
-    [JsonName('join')]
+    [JsonName('timeline')]
     FTimeLine: TmtrTimeline;
   public
     constructor Create;

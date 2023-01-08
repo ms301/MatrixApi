@@ -1,0 +1,11 @@
+{
+	"name": "MatrixaPi",
+	"description": "Impementation Matrix.org messaging protocol",
+	"version": "0.0.1",
+	"homepage": "https://github.com/rareMaxim/MatrixaPi",
+	"mainsrc": ".",
+	"projects": [],
+	"dependencies": {
+		"github.com/rareMaxim/Citrus": "^0.0.1"
+	}
+}

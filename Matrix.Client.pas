@@ -6,21 +6,53 @@ uses
   Citrus.Mandarin,
   Citrus.Authenticator.JWT,
   FMX.Types,
+  Matrix.Types,
   Matrix.Types.Response,
-  System.SysUtils;
+  System.SysUtils,
+  System.Generics.Collections;
 
 type
   IHTTPResponse = Citrus.Mandarin.IHTTPResponse;
 
-  TMatrixaPi = class
+  IMatrixaPI = interface
+    ['{EB9D8D9C-0C22-4A5A-8501-E31B2E160DAF}']
+    //private
+    function GetUserId: string;
+    function GetBaseAddress: string;
+    function GetIsLoggedIn: Boolean;
+    function GetIsSyncing: Boolean;
+    function GetInvitedRooms: TObjectList<TMatrixRoom>;
+    //public
+    property UserId: string read GetUserId;
+    property BaseAddress: string read GetBaseAddress;
+    property IsLoggedIn: Boolean read GetIsLoggedIn;
+    property IsSyncing: Boolean read GetIsSyncing;
+    property InvitedRooms: TObjectList<TMatrixRoom> read GetInvitedRooms;
+  end;
+
+  TMatrixaPi = class(TInterfacedObject, IMatrixaPI)
+  private const
+    API_ENDPOINT_SERVER = '{server}';
+    API_ENDPOINT_BASE = API_ENDPOINT_SERVER + '/_matrix/client/';
+    API_ENDPOINT_NO_VER = API_ENDPOINT_BASE + '{method}';
+    API_ENDPOINT_V_3 = API_ENDPOINT_SERVER + '/_matrix/client/v3/{method}';
+    API_ENDPOINT_V_3_MEDIA = API_ENDPOINT_SERVER + '/_matrix/media/v3/{method}';
   private
     FCli: TMandarinClientJson;
-    FUrl: string;
+    FUserId: string;
+    FBaseAddress: string;
     FIsSyncMode: Boolean;
     FAuthenticator: TJwtAuthenticator;
+    FInvitedRooms: TObjectList<TMatrixRoom>;
     FNextBatchSync: string;
     FIsPoolingOn: Boolean;
+    FIsSyncing: Boolean;
+    function GetBaseAddress: string;
     procedure SetIsPoolingOn(const Value: Boolean);
+    function GetUserId: string;
+    function GetIsLoggedIn: Boolean;
+    function GetIsSyncing: Boolean;
+    function GetInvitedRooms: TObjectList<TMatrixRoom>;
   protected
     procedure DoCheckError(AHttpResp: IHTTPResponse);
     procedure RunSync(const ANext: string);
@@ -29,6 +61,24 @@ type
     /// Clients should pick one of these and supply it as the type when logging in.
     /// </summary>
     procedure LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
+    /// <summary>
+    /// Authenticates the user.
+    /// </summary>
+    /// <remarks>
+    /// Authenticates the user, and issues an access token they can use to authorize
+    /// themself in subsequent requests.
+    /// </remarks>
+    procedure Login<T: class>(ALoginCallback: TProc<TmtrLogin, IHTTPResponse>; ALoginData: T);
+
+    /// <summary>
+    /// Authenticates the user.
+    /// </summary>
+    /// <remarks>
+    /// Authenticates the user, and issues an access token they can use to authorize
+    /// themself in subsequent requests.
+    /// </remarks>
+    procedure LoginWithPassword(ALoginCallback: TProc<TmtrLogin, IHTTPResponse>; const AUser, APassword: string);
+    procedure Download(ADownloadCallback: TProc<IHTTPResponse>; const AMxcUrl: string);
     procedure Start;
     procedure Stop;
     procedure ServerDiscoveryInformation(AWelKnownCallback: TProc<TmtrWelKnown, IHTTPResponse>);
@@ -44,14 +94,6 @@ type
     procedure PublicRooms(APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>;
       APublicRoomBuilder: IMandarinBuider); overload;
 
-    /// <summary>
-    /// Authenticates the user.
-    /// </summary>
-    /// <remarks>
-    /// Authenticates the user, and issues an access token they can use to authorize
-    /// themself in subsequent requests.
-    /// </remarks>
-    procedure LoginWithPassword(const AUser, APassword: string; ALoginCallback: TProc<TmtrLogin, IHTTPResponse>);
     procedure ClientVersions(AVersionsCallback: TProc<TmtrVersions, IHTTPResponse>);
     /// <summary>
     /// Create a new room
@@ -64,22 +106,20 @@ type
     constructor Create(const AUrl: string = 'https://matrix-client.matrix.org');
     destructor Destroy; override;
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
-    property Url: string read FUrl write FUrl;
+    property IsSyncing: Boolean read GetIsSyncing;
+    property BaseAddress: string read GetBaseAddress write FBaseAddress;
+    property IsLoggedIn: Boolean read GetIsLoggedIn;
     property Authenticator: TJwtAuthenticator read FAuthenticator write FAuthenticator;
+    property UserId: string read GetUserId;
     property IsPoolingOn: Boolean read FIsPoolingOn write SetIsPoolingOn;
+    property InvitedRooms: TObjectList<TMatrixRoom> read GetInvitedRooms;
   end;
 
 implementation
 
 uses
   Matrix.Types.Requests,
-  System.Net.HttpClient, System.Classes;
-
-const
-  API_ENDPOINT_SERVER = '{server}';
-  API_ENDPOINT_BASE = API_ENDPOINT_SERVER + '/_matrix/client/';
-  API_ENDPOINT_NO_VER = API_ENDPOINT_BASE + '{method}';
-  API_ENDPOINT_V_3 = API_ENDPOINT_SERVER + '/_matrix/client/v3/{method}';
+  System.Net.HttpClient, System.Classes, System.Net.URLClient;
 
 constructor TMatrixaPi.Create(const AUrl: string = 'https://matrix-client.matrix.org');
 begin
@@ -89,10 +129,10 @@ begin
   FCli.Authenticator := FAuthenticator;
   FCli.OnBeforeExcecute := procedure(AMandarin: IMandarin)
     begin
-      AMandarin.AddUrlSegment('server', FUrl);
+      AMandarin.AddUrlSegment('server', FBaseAddress);
       AMandarin.AddHeader('Content-Type', 'application/json');
     end;
-  FUrl := AUrl;
+  FBaseAddress := AUrl;
   FIsSyncMode := True;
 end;
 
@@ -133,6 +173,58 @@ begin
     Exit;
 end;
 
+procedure TMatrixaPi.Download(ADownloadCallback: TProc<IHTTPResponse>; const AMxcUrl: string);
+var
+  LMxcUrl: TURI;
+begin
+  LMxcUrl := TURI.Create(AMxcUrl);
+  FCli.NewMandarin(API_ENDPOINT_V_3_MEDIA + '/{serverName}/{mediaId}') //
+    .AddUrlSegment('method', 'download')//
+    .AddUrlSegment('serverName', LMxcUrl.Host)//
+    .AddUrlSegment('mediaId', LMxcUrl.Path.Substring(1))//
+    .SetRequestMethod(sHTTPMethodGet)//
+    .Execute(ADownloadCallback, FIsSyncMode);
+end;
+
+function TMatrixaPi.GetBaseAddress: string;
+begin
+  Result := FBaseAddress;
+end;
+
+function TMatrixaPi.GetInvitedRooms: TObjectList<TMatrixRoom>;
+begin
+  Result := FInvitedRooms;
+end;
+
+function TMatrixaPi.GetIsLoggedIn: Boolean;
+begin
+  Result := not FUserId.IsEmpty;
+end;
+
+function TMatrixaPi.GetIsSyncing: Boolean;
+begin
+  Result := FIsSyncing;
+end;
+
+function TMatrixaPi.GetUserId: string;
+begin
+  Result := FUserId;
+end;
+
+procedure TMatrixaPi.Login<T>(ALoginCallback: TProc<TmtrLogin, IHTTPResponse>; ALoginData: T);
+begin
+  FCli.NewMandarin<TmtrLogin>(API_ENDPOINT_V_3) //
+    .SetRequestMethod(sHTTPMethodPost) //
+    .AddUrlSegment('method', 'login') //
+    .SetBody(ALoginData) //
+    .Execute(
+    procedure(ALogin: TmtrLogin; AHttpResp: IHTTPResponse)
+    begin
+      FUserId := ALogin.UserId;
+      ALoginCallback(ALogin, AHttpResp);
+    end, FIsSyncMode);
+end;
+
 procedure TMatrixaPi.LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
 begin
   FCli.NewMandarin<TmtrLoginFlows>(API_ENDPOINT_V_3) //
@@ -141,19 +233,18 @@ begin
     .Execute(AFlowsCallback, FIsSyncMode);
 end;
 
-procedure TMatrixaPi.LoginWithPassword(const AUser, APassword: string; ALoginCallback: TProc<TmtrLogin, IHTTPResponse>);
+procedure TMatrixaPi.LoginWithPassword(ALoginCallback: TProc<TmtrLogin, IHTTPResponse>; const AUser, APassword: string);
 var
-  LLogin: TmtxLoginRequest;
+  LIdent: TmtxlIdentifierLoginPassword;
+  LLogin: TmtxLoginRequest<TmtxlIdentifierLoginPassword>;
 begin
-  LLogin := TmtxLoginRequest.Create(AUser, APassword);
-  LLogin.InitialDeviceDisplayName := 'Jungle Phone';
+  LIdent := TmtxlIdentifierLoginPassword.Create(AUser);
+  LLogin := TmtxLoginRequest<TmtxlIdentifierLoginPassword>.Create(LIdent, APassword);
   try
-    FCli.NewMandarin<TmtrLogin>(API_ENDPOINT_V_3) //
-      .SetRequestMethod(sHTTPMethodPost) //
-      .AddUrlSegment('method', 'login') //
-      .SetBody(LLogin) //
-      .Execute(ALoginCallback, FIsSyncMode);
+    LLogin.InitialDeviceDisplayName := 'Matrix for Delphi';
+    Login < TmtxLoginRequest < TmtxlIdentifierLoginPassword >> (ALoginCallback, LLogin);
   finally
+    LIdent.Free;
     LLogin.Free;
   end;
 end;
@@ -213,6 +304,8 @@ begin
       procedure(ASync: TmtrSync; AHttpResp: IHTTPResponse)
       begin
         FNextBatchSync := ASync.NextBatch;
+        var
+        x := ASync.Rooms.Join.ToArray[0].Value.TimeLine.Events.First;
         ASync.Free;
         RunSync(ASync.NextBatch);
       end);
@@ -255,7 +348,12 @@ begin
   LMandarin.Url := API_ENDPOINT_V_3;
   LMandarin.AddUrlSegment('method', 'sync');
   LMandarin.RequestMethod := sHTTPMethodGet;
-  FCli.Execute<TmtrSync>(LMandarin, ARoomCallback, FIsSyncMode);
+  FCli.Execute<TmtrSync>(LMandarin,
+    procedure(ASync: TmtrSync; AHttpResp: IHTTPResponse)
+    begin
+      ARoomCallback(ASync, AHttpResp);
+
+    end, FIsSyncMode);
 end;
 
 end.

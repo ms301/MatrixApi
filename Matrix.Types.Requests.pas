@@ -8,32 +8,64 @@ uses
   Citrus.Mandarin;
 
 type
-  TmtxLoginRequest = class
-  private type
-    TmtxlIdentifier = class
-    private
-      [JsonName('type')]
-      FType: string;
-      [JsonName('user')]
-      FUser: string;
-    public
-      constructor Create(const AType, AUser: string);
-      property &Type: string read FType write FType;
-      property User: string read FUser write FUser;
-    end;
+  TmtxlIdentifierLoginPassword = class
+  private
+    [JsonName('type')]
+    FType: string;
+    [JsonName('user')]
+    FUser: string;
+  public
+    constructor Create(const AUser: string);
+    property &Type: string read FType write FType;
+    property User: string read FUser write FUser;
+  end;
+
+  TmtxlIdentifierLoginEMail = class
+  private
+    [JsonName('type')]
+    FType: string;
+    [JsonName('address')]
+    FAddress: string;
+    [JsonName('medium')]
+    FMedium: string;
+  public
+    constructor Create;
+    property &Type: string read FType write FType;
+    property Address: string read FAddress write FAddress;
+    property Medium: string read FMedium write FMedium;
+  end;
+
+  TmtxlIdentifierLoginPhone = class
+  private
+    [JsonName('type')]
+    FType: string;
+    [JsonName('country')]
+    FCountry: string;
+    [JsonName('number')]
+    FNumber: string;
+    [JsonName('phone')]
+    FPhone: string;
+  public
+    constructor Create;
+    property &Type: string read FType write FType;
+    property Country: string read FCountry write FCountry;
+    property Number: string read FNumber write FNumber;
+    property Phone: string read FPhone write FPhone;
+  end;
+
+  TmtxLoginRequest<T: class> = class
   private
     [JsonName('initial_device_display_name')]
     FInitialDeviceDisplayName: string;
     [JsonName('identifier')]
-    FIdentifier: TmtxlIdentifier;
+    FIdentifier: T;
     [JsonName('password')]
     FPassword: string;
     [JsonName('type')]
     FType: string;
   public
-    constructor Create(const AUser, APassword: string);
-    destructor Destroy; override;
-    property Identifier: TmtxlIdentifier read FIdentifier write FIdentifier;
+    constructor Create(AIdentifier: T; const APassword: string);
+    property Identifier: T read FIdentifier write FIdentifier;
     property InitialDeviceDisplayName: string read FInitialDeviceDisplayName write FInitialDeviceDisplayName;
     property Password: string read FPassword write FPassword;
     property &Type: string read FType write FType;
@@ -152,29 +184,19 @@ implementation
 uses
   System.SysUtils;
 
-constructor TmtxLoginRequest.TmtxlIdentifier.Create(
-
-  const AType, AUser: string);
+constructor TmtxlIdentifierLoginPassword.Create(const AUser: string);
 begin
   inherited Create;
-  FType := AType;
+  FType := 'm.id.user';
   FUser := AUser;
 end;
 
-constructor TmtxLoginRequest.Create(
-
-  const AUser, APassword: string);
+constructor TmtxLoginRequest<T>.Create(AIdentifier: T; const APassword: string);
 begin
   inherited Create;
-  FIdentifier := TmtxlIdentifier.Create('m.id.user', AUser);
+  FIdentifier := AIdentifier;
   FPassword := APassword;
   FType := 'm.login.password';
-end;
-
-destructor TmtxLoginRequest.Destroy;
-begin
-  FIdentifier.Free;
-  inherited Destroy;
 end;
 
 function TmtxCreateRoomBuider.BuildBody: string;
@@ -362,6 +384,19 @@ function TmtxPublicRoomRequest.SetThirdPartyInstanceId(const AId: string): TmtxP
 begin
   FMandarin.Body.AddJsonPair('third_party_instance_id', AId);
   Result := Self;
+end;
+
+{ TmtxlIdentifierLoginEMail }
+
+constructor TmtxlIdentifierLoginEMail.Create;
+begin
+  FType := 'm.id.thirdparty';
+end;
+
+{ TmtxlIdentifierLoginPhone }
+constructor TmtxlIdentifierLoginPhone.Create;
+begin
+  FType := 'm.id.phone';
 end;
 
 end.
