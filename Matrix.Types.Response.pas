@@ -113,10 +113,27 @@ type
     [JsonName('type')]
     FEventType: string;
   public
+    /// <summary>
+    /// Required: The body of this event, as created by the client which sent it.
+    /// </summary>
     property Content: TJSONObject read FContent write FContent;
-    property OriginServerTimestamp: Int64 read FOriginServerTimestamp write FOriginServerTimestamp;
-    property Sender: string read FSender write FSender;
+    /// <summary>
+    /// Required: The globally unique identifier for this event.
+    /// </summary>
     property EventId: string read FEventId write FEventId;
+    /// <summary>
+    /// Required: Timestamp (in milliseconds since the unix epoch) on originating
+    /// homeserver when this event was sent.
+    /// </summary>
+    property OriginServerTimestamp: Int64 read FOriginServerTimestamp write FOriginServerTimestamp;
+    /// <summary>
+    /// Required: Contains the fully-qualified ID of the user who sent this event.
+    /// </summary>
+    property Sender: string read FSender write FSender;
+
+    /// <summary>
+    /// Required: The type of the event.
+    /// </summary>
     property EventType: string read FEventType write FEventType;
   end;
 
@@ -202,7 +219,7 @@ type
   end;
 
   /// <summary>
-  ///     Synchronization response.
+  /// Synchronization response.
   /// </summary>
   TmtrSync = class(TmtrError)
   private
@@ -254,7 +271,7 @@ type
       /// </summary>
       property AvatarUrl: string read FAvatarUrl write FAvatarUrl;
       /// <summary>
-      /// 	The canonical alias of the room, if any.
+      /// The canonical alias of the room, if any.
       /// </summary>
       property CanonicalAlias: string read FCanonicalAlias write FCanonicalAlias;
       /// <summary>
@@ -384,7 +401,7 @@ type
 
 implementation
 
-{TmtrLogin}
+{ TmtrLogin }
 constructor TmtrLogin.Create;
 begin
   inherited Create;
@@ -397,7 +414,7 @@ begin
   inherited Destroy;
 end;
 
-{TmtrVersions}
+{ TmtrVersions }
 constructor TmtrVersions.Create;
 begin
   inherited Create;
@@ -410,7 +427,7 @@ begin
   inherited Destroy;
 end;
 
-{TmtrSync}
+{ TmtrSync }
 constructor TmtrSync.Create;
 begin
   inherited Create;
@@ -423,7 +440,7 @@ begin
   inherited Destroy;
 end;
 
-{TmtrSyncRooms}
+{ TmtrSyncRooms }
 constructor TmtrSyncRooms.Create;
 begin
   inherited Create;
@@ -442,7 +459,7 @@ begin
   inherited Destroy;
 end;
 
-{TmtrTimeline}
+{ TmtrTimeline }
 constructor TmtrTimeline.Create;
 begin
   inherited Create;
@@ -455,7 +472,7 @@ begin
   inherited Destroy;
 end;
 
-{TmtrSyncRoomsJoinedRoom}
+{ TmtrSyncRoomsJoinedRoom }
 constructor TmtrSyncRoomsJoinedRoom.Create;
 begin
   inherited Create;
@@ -468,7 +485,7 @@ begin
   inherited Destroy;
 end;
 
-{TmtrPublicRooms}
+{ TmtrPublicRooms }
 constructor TmtrPublicRooms.Create;
 begin
   inherited Create;
