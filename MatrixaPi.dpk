@@ -32,10 +32,14 @@ requires
   fmx;
 
 contains
+  Matrix.RoomEvent.BaseRoomEvent in 'Matrix.RoomEvent.BaseRoomEvent.pas',
   Matrix.Client in 'Matrix.Client.pas',
-  Matrix.Types.Response in 'Matrix.Types.Response.pas',
+  Matrix.SyncBath in 'Matrix.SyncBath.pas',
+  Matrix.Types in 'Matrix.Types.pas',
   Matrix.Types.Requests in 'Matrix.Types.Requests.pas',
-  Matrix.Types in 'Matrix.Types.pas';
+  Matrix.Types.Response in 'Matrix.Types.Response.pas',
+  MatrixaPi.RoomEvent.JoinRoomEvent in 'MatrixaPi.RoomEvent.JoinRoomEvent.pas',
+  Matrix.RoomEvent.RoomMemberContent in 'Matrix.RoomEvent.RoomMemberContent.pas';
 
 end.
 

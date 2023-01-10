@@ -3,7 +3,7 @@
         <ProjectGuid>{855C35BB-F1BF-4147-8FC9-E04D496E0814}</ProjectGuid>
         <MainSource>MatrixaPi.dpk</MainSource>
         <ProjectVersion>19.2</ProjectVersion>
-        <FrameworkType>None</FrameworkType>
+        <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
@@ -101,10 +101,14 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="fmx.dcp"/>
+        <DCCReference Include="Matrix.RoomEvent.BaseRoomEvent.pas"/>
         <DCCReference Include="Matrix.Client.pas"/>
-        <DCCReference Include="Matrix.Types.Response.pas"/>
-        <DCCReference Include="Matrix.Types.Requests.pas"/>
+        <DCCReference Include="Matrix.SyncBath.pas"/>
         <DCCReference Include="Matrix.Types.pas"/>
+        <DCCReference Include="Matrix.Types.Requests.pas"/>
+        <DCCReference Include="Matrix.Types.Response.pas"/>
+        <DCCReference Include="MatrixaPi.RoomEvent.JoinRoomEvent.pas"/>
+        <DCCReference Include="Matrix.RoomEvent.RoomMemberContent.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

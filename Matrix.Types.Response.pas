@@ -99,6 +99,11 @@ type
     property RoomId: string read FRoomId write FRoomId;
   end;
 
+{$SCOPEDENUMS ON}
+
+  TEventType = (Unknown, Create, Member, Message);
+{$SCOPEDENUMS OFF}
+
   TmtrRoomEvent = class
   private
     [JsonName('event_id')]
@@ -111,7 +116,8 @@ type
     [JsonName('origin_server_ts')]
     FOriginServerTimestamp: Int64;
     [JsonName('type')]
-    FEventType: string;
+    [JsonConverter(TJsonEnumNameConverter)]
+    FEventType: TEventType;
   public
     /// <summary>
     /// Required: The body of this event, as created by the client which sent it.
@@ -134,7 +140,7 @@ type
     /// <summary>
     /// Required: The type of the event.
     /// </summary>
-    property EventType: string read FEventType write FEventType;
+    property EventType: TEventType read FEventType write FEventType;
   end;
 
   TmtrTimeline = class
