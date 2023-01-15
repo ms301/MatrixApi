@@ -1,4 +1,4 @@
-﻿unit Matrix.Types.Requests;
+﻿unit MatrixaPi.Types.Requests;
 
 interface
 
@@ -69,53 +69,6 @@ type
     property InitialDeviceDisplayName: string read FInitialDeviceDisplayName write FInitialDeviceDisplayName;
     property Password: string read FPassword write FPassword;
     property &Type: string read FType write FType;
-  end;
-
-  TmtxCreateRoomBuider = class(TInterfacedObject, IMandarinBodyBuider)
-  private type
-{$SCOPEDENUMS ON}
-    TVisibility = (public, private);
-    TPreset = (PrivateChat, PublicChat, TrustedPrivateChat);
-{$SCOPEDENUMS OFF}
-  private
-    FJson: TJSONObject;
-    FMandarin: IMandarin;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    function JsonAsString: string;
-    function SetMembers(AMembers: TArray<string>): TmtxCreateRoomBuider;
-    /// <remarks>
-    /// If this is included, an m.room.name event will be sent into the room to
-    /// indicate the name of the room. See Room Events for more information on m.room.
-    /// name.
-    /// </remarks>
-    function SetName(const AName: string): TmtxCreateRoomBuider;
-    function SetPreset(const APreset: TPreset): TmtxCreateRoomBuider;
-    /// <remarks>
-    /// This flag makes the server set the is_direct flag on the m.room.member events
-    /// sent to the users in invite and invite_3pid. See Direct Messaging for more
-    /// information.
-    /// </remarks>
-    function SetIsDirect(const AIsDirect: Boolean): TmtxCreateRoomBuider;
-    /// <remarks>
-    /// The desired room alias local part. If this is included, a room alias will be
-    /// created and mapped to the newly created room. The alias will belong on the same
-    /// homeserver which created the room. For example, if this was set to "foo" and
-    /// sent to the homeserver "example.com" the complete room alias would be #foo:
-    /// example.com.
-    /// The complete room alias will become the canonical alias for the room and an m.
-    /// room.canonical_alias event will be sent into the room.
-    /// </remarks>
-    function SetRoomAliasName(const ARoomAliasName: string): TmtxCreateRoomBuider;
-    /// <remarks>
-    /// The room version to set for the room. If not provided, the homeserver is to use
-    /// its configured
-    /// </remarks>
-    function SetRoomVersion(const ARoomVersion: string): TmtxCreateRoomBuider;
-    function SetTopic(const ATopic: string): TmtxCreateRoomBuider;
-    function SetVisibility(const AVisibility: TVisibility): TmtxCreateRoomBuider;
-    function BuildBody: string;
   end;
 
   TmtxSyncRequest = class(TInterfacedObject, IMandarinBuider)
@@ -197,95 +150,7 @@ begin
   FIdentifier := AIdentifier;
   FPassword := APassword;
   FType := 'm.login.password';
-end;
-
-function TmtxCreateRoomBuider.BuildBody: string;
-begin
-  Result := FJson.ToJSON;
-end;
-
-constructor TmtxCreateRoomBuider.Create;
-begin
-  inherited Create;
-  FMandarin := TMandarin.Create;
-  FJson := TJSONObject.Create();
-end;
-
-destructor TmtxCreateRoomBuider.Destroy;
-begin
-  FJson.Free;
-  inherited Destroy;
-end;
-
-function TmtxCreateRoomBuider.JsonAsString: string;
-begin
-  Result := FJson.ToJSON;
-end;
-
-function TmtxCreateRoomBuider.SetIsDirect(const AIsDirect: Boolean): TmtxCreateRoomBuider;
-begin
-  FJson.AddPair('is_direct', TJSONBool.Create(AIsDirect));
-  Result := Self;
-end;
-
-function TmtxCreateRoomBuider.SetMembers(AMembers: TArray<string>): TmtxCreateRoomBuider;
-begin
-  FJson.AddPair('invite', '[' + string.Join(',', AMembers) + ']');
-  Result := Self;
-end;
-
-function TmtxCreateRoomBuider.SetName(const AName: string): TmtxCreateRoomBuider;
-begin
-  FJson.AddPair('name', AName);
-  Result := Self;
-end;
-
-function TmtxCreateRoomBuider.SetPreset(const APreset: TPreset): TmtxCreateRoomBuider;
-var
-  lPreset: string;
-begin
-  case APreset of
-    TPreset.PrivateChat:
-      lPreset := 'private_chat';
-    TPreset.PublicChat:
-      lPreset := 'public_chat';
-    TPreset.TrustedPrivateChat:
-      lPreset := 'trusted_private_chat';
-  end;
-  FJson.AddPair('preset', lPreset);
-  Result := Self;
-end;
-
-function TmtxCreateRoomBuider.SetRoomAliasName(const ARoomAliasName: string): TmtxCreateRoomBuider;
-begin
-  FJson.AddPair('room_alias_name', ARoomAliasName);
-  Result := Self;
-end;
-
-function TmtxCreateRoomBuider.SetRoomVersion(const ARoomVersion: string): TmtxCreateRoomBuider;
-begin
-  FJson.AddPair('room_version', ARoomVersion);
-  Result := Self;
-end;
-
-function TmtxCreateRoomBuider.SetTopic(const ATopic: string): TmtxCreateRoomBuider;
-begin
-  FJson.AddPair('topic', ATopic);
-  Result := Self;
-end;
-
-function TmtxCreateRoomBuider.SetVisibility(const AVisibility: TVisibility): TmtxCreateRoomBuider;
-var
-  LVisibility: string;
-begin
-  case AVisibility of
-    TVisibility.public:
-      LVisibility := 'public';
-    TVisibility.private:
-      LVisibility := 'private';
-  end;
-  FJson.AddPair('visibility', LVisibility);
-  Result := Self;
+  FInitialDeviceDisplayName := 'Matrix for Delphi';
 end;
 
 function TmtxSyncRequest.Build: IMandarin;

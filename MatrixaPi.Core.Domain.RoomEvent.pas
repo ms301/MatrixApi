@@ -1,20 +1,30 @@
-﻿unit MatrixaPi.RoomEvent.JoinRoomEvent;
+﻿unit MatrixaPi.Core.Domain.RoomEvent;
 
 interface
 
 uses
-  Matrix.RoomEvent.BaseRoomEvent,
-  Matrix.Types.Response;
+  MatrixaPi.Types.Response,
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room;
 
 type
+  TBaseRoomEvent = class
+  private
+    FRoomId: string;
+    FSenderUserId: string;
+  public
+    constructor Create(const ARoomId, ASenderUserId: string); virtual;
+    property RoomId: string read FRoomId write FRoomId;
+    property SenderUserId: string read FSenderUserId write FSenderUserId;
+  end;
+
   TJoinRoomEvent = class(TBaseRoomEvent)
   public type
     Factory = class
-      class function TryCreateFrom(ARoomEvent: TmtrRoomEvent; const ARoomId: string;
+      class function TryCreateFrom(ARoomEvent: TRoomEvent; const ARoomId: string;
         var AJoinRoomEvent: TJoinRoomEvent): Boolean;
     end;
   public
-    constructor Create(const ARoomId, ASenderUserId: string);
+    constructor Create(const ARoomId, ASenderUserId: string); override;
     property RoomId;
     property SenderUserId;
   end;
@@ -23,9 +33,19 @@ implementation
 
 uses
   System.JSON.Serializers,
-  Matrix.RoomEvent.RoomMemberContent, System.SysUtils;
+  MatrixaPi.RoomEvent.RoomMemberContent,
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event;
 
-class function TJoinRoomEvent.Factory.TryCreateFrom(ARoomEvent: TmtrRoomEvent; const ARoomId: string;
+{TBaseRoomEvent}
+constructor TBaseRoomEvent.Create(const ARoomId, ASenderUserId: string);
+begin
+  inherited Create;
+  FRoomId := ARoomId;
+  FSenderUserId := ASenderUserId;
+end;
+
+{TJoinRoomEvent}
+class function TJoinRoomEvent.Factory.TryCreateFrom(ARoomEvent: TRoomEvent; const ARoomId: string;
   var AJoinRoomEvent: TJoinRoomEvent): Boolean;
 var
   LSerializer: TJsonSerializer;
@@ -41,7 +61,7 @@ begin
       if Result then
         AJoinRoomEvent := TJoinRoomEvent.Create(ARoomId, ARoomEvent.Sender)
       else
-        AJoinRoomEvent := TJoinRoomEvent.Create(string.Empty, string.Empty);
+        AJoinRoomEvent := nil{TJoinRoomEvent.Create(string.Empty, string.Empty)};
     finally
       LContent.Free;
     end;

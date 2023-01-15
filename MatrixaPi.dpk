@@ -32,14 +32,22 @@ requires
   fmx;
 
 contains
-  Matrix.RoomEvent.BaseRoomEvent in 'Matrix.RoomEvent.BaseRoomEvent.pas',
-  Matrix.Client in 'Matrix.Client.pas',
-  Matrix.SyncBath in 'Matrix.SyncBath.pas',
-  Matrix.Types in 'Matrix.Types.pas',
-  Matrix.Types.Requests in 'Matrix.Types.Requests.pas',
-  Matrix.Types.Response in 'Matrix.Types.Response.pas',
-  MatrixaPi.RoomEvent.JoinRoomEvent in 'MatrixaPi.RoomEvent.JoinRoomEvent.pas',
-  Matrix.RoomEvent.RoomMemberContent in 'Matrix.RoomEvent.RoomMemberContent.pas';
+  MatrixaPi in 'MatrixaPi.pas',
+  MatrixaPi.Types in 'MatrixaPi.Types.pas',
+  MatrixaPi.Types.Requests in 'MatrixaPi.Types.Requests.pas',
+  MatrixaPi.Types.Response in 'MatrixaPi.Types.Response.pas',
+  MatrixaPi.RoomEvent.RoomMemberContent in 'MatrixaPi.RoomEvent.RoomMemberContent.pas',
+  MatrixaPi.Core.Domain.MatrixRoom in 'MatrixaPi.Core.Domain.MatrixRoom.pas',
+  MatrixaPi.Core.Domain.RoomEvent in 'MatrixaPi.Core.Domain.RoomEvent.pas',
+  MatrixaPi.Core.Domain in 'MatrixaPi.Core.Domain.pas',
+  MatrixaPi.Core.Infrastructure.Services in 'MatrixaPi.Core.Infrastructure.Services.pas',
+  MatrixaPi.Core.Domain.Services in 'MatrixaPi.Core.Domain.Services.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Room.Create in 'MatrixaPi.Core.Infrastructure.Dto.Room.Create.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Room.Join in 'MatrixaPi.Core.Infrastructure.Dto.Room.Join.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Sync in 'MatrixaPi.Core.Infrastructure.Dto.Sync.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event in 'MatrixaPi.Core.Infrastructure.Dto.Sync.Event.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Room.Joined in 'MatrixaPi.Core.Infrastructure.Dto.Room.Joined.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room in 'MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.pas';
 
 end.
 

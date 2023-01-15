@@ -101,14 +101,22 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="fmx.dcp"/>
-        <DCCReference Include="Matrix.RoomEvent.BaseRoomEvent.pas"/>
-        <DCCReference Include="Matrix.Client.pas"/>
-        <DCCReference Include="Matrix.SyncBath.pas"/>
-        <DCCReference Include="Matrix.Types.pas"/>
-        <DCCReference Include="Matrix.Types.Requests.pas"/>
-        <DCCReference Include="Matrix.Types.Response.pas"/>
-        <DCCReference Include="MatrixaPi.RoomEvent.JoinRoomEvent.pas"/>
-        <DCCReference Include="Matrix.RoomEvent.RoomMemberContent.pas"/>
+        <DCCReference Include="MatrixaPi.pas"/>
+        <DCCReference Include="MatrixaPi.Types.pas"/>
+        <DCCReference Include="MatrixaPi.Types.Requests.pas"/>
+        <DCCReference Include="MatrixaPi.Types.Response.pas"/>
+        <DCCReference Include="MatrixaPi.RoomEvent.RoomMemberContent.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Domain.MatrixRoom.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Domain.RoomEvent.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Domain.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Services.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Domain.Services.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Room.Create.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Room.Join.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Room.Joined.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
