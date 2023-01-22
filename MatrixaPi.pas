@@ -15,7 +15,8 @@ uses
   MatrixaPi.Core.Domain.RoomEvent,
   MatrixaPi.Core.Domain.MatrixRoom,
   MatrixaPi.Core.Infrastructure.Dto.Room.Create,
-  MatrixaPi.Core.Infrastructure.Dto.Sync;
+  MatrixaPi.Core.Infrastructure.Dto.Sync,
+  MatrixaPi.Core.Infrastructure.Dto.Login;
 
 type
   IHTTPResponse = Citrus.Mandarin.IHTTPResponse;
@@ -34,6 +35,7 @@ type
     procedure SetOnMatrixRoomEventsReceived(const Value: TProc<TList<TBaseRoomEvent>, string>);
     procedure SetAuthenticator(const Value: TJwtAuthenticator);
     function GetAuthenticator: TJwtAuthenticator;
+    procedure SetBaseAddress(const Value: string);
     //public
     /// <summary>
     /// Authenticates the user.
@@ -57,7 +59,7 @@ type
     /// <summary> Gets the homeserver’s supported login types to authenticate users.
     /// Clients should pick one of these and supply it as the type when logging in.
     /// </summary>
-    procedure LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
+    procedure LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>; const ABaseAddress: string);
     /// <summary>
     /// Lists the public rooms on the server, with optional filter.
     /// </summary>
@@ -71,7 +73,7 @@ type
       const ASince: string = ''; const AServer: string = ''); overload;
     procedure Download(ADownloadCallback: TProc<IHTTPResponse>; const AMxcUrl: string);
     property UserId: string read GetUserId;
-    property BaseAddress: string read GetBaseAddress;
+    property BaseAddress: string read GetBaseAddress write SetBaseAddress;
     property IsLoggedIn: Boolean read GetIsLoggedIn;
     property IsSyncing: Boolean read GetIsSyncing;
     property InvitedRooms: TArray<TMatrixRoom> read GetInvitedRooms;
@@ -111,6 +113,7 @@ type
     function GetJoinedRooms: TArray<TMatrixRoom>;
     function GetLeftRooms: TArray<TMatrixRoom>;
     procedure SetAuthenticator(const Value: TJwtAuthenticator);
+    procedure SetBaseAddress(const Value: string);
   protected
     procedure DoOnSyncBatchReceived(AObject: TObject; ASyncBatchEvent: TSyncBatch);
     procedure DoCheckError(AHttpResp: IHTTPResponse);
@@ -127,7 +130,7 @@ type
     /// <summary> Gets the homeserver’s supported login types to authenticate users.
     /// Clients should pick one of these and supply it as the type when logging in.
     /// </summary>
-    procedure LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
+    procedure LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>; const ABaseAddress: string);
     procedure Download(ADownloadCallback: TProc<IHTTPResponse>; const AMxcUrl: string);
     procedure Start(const ANextBatch: string = '');
     procedure Stop;
@@ -156,7 +159,7 @@ type
     destructor Destroy; override;
     property IsSyncMode: Boolean read FIsSyncMode write FIsSyncMode;
     property IsSyncing: Boolean read GetIsSyncing;
-    property BaseAddress: string read GetBaseAddress;
+    property BaseAddress: string read GetBaseAddress write SetBaseAddress;
     property IsLoggedIn: Boolean read GetIsLoggedIn;
     property Authenticator: TJwtAuthenticator read GetAuthenticator write SetAuthenticator;
     property UserId: string read GetUserId;
@@ -182,6 +185,7 @@ type
     destructor Destroy; override;
     function CreateASyncClient: IMatrixaPi;
     function CreateSyncClient: IMatrixaPi;
+    function GetMandarinClient: TMandarinClientJson;
   end;
 
 implementation
@@ -269,16 +273,15 @@ begin
   Result := FUserId;
 end;
 
-procedure TMatrixaPi.LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
+procedure TMatrixaPi.LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>; const ABaseAddress: string);
 begin
-  FUserService.LoginFlows(AFlowsCallback);
+  FUserService.LoginFlows(AFlowsCallback, ABaseAddress);
 end;
 
 procedure TMatrixaPi.LoginWithPassword(ALoginCallback: TProc<TmtrLogin, IHTTPResponse>;
   const ABaseAddress, AUser, APassword, ADeviceId: string);
 begin
-  FUserService.BaseAdress := ABaseAddress;
-  FBaseAddress := ABaseAddress;
+  BaseAddress := ABaseAddress;
   FUserService.LoginWithPassword(
     procedure(ALogin: TmtrLogin; AHttpResp: IHTTPResponse)
     begin
@@ -320,6 +323,15 @@ begin
   FAuthenticator := Value;
 end;
 
+procedure TMatrixaPi.SetBaseAddress(const Value: string);
+begin
+  FBaseAddress := Value;
+  FUserService.BaseAdress := FBaseAddress;
+  FRoomService.BaseAdress := FBaseAddress;
+  FEventService.BaseAdress := FBaseAddress;
+  FModulesService.BaseAdress := FBaseAddress;
+end;
+
 procedure TMatrixaPi.SetOnMatrixRoomEventsReceived(const Value: TProc<TList<TBaseRoomEvent>, string>);
 begin
   FOnMatrixRoomEventsReceived := Value;
@@ -347,8 +359,8 @@ begin
   FMandarin := TMandarinClientJson.Create;
   FMandarin.OnBeforeExcecute := procedure(AMandarin: IMandarin)
     begin
-      AMandarin.AddUrlSegment('server', FClient.BaseAddress);
       AMandarin.AddHeader('Content-Type', 'application/json');
+      FMandarin.Authenticator := FClient.Authenticator;
     end;
   FClient := nil;
   FEventService := TEventService.Create(FMandarin);
@@ -379,6 +391,11 @@ begin
   FMandarin.Free;
   FModulesService.Free;
   inherited Destroy;
+end;
+
+function TMatrixClientFactory.GetMandarinClient: TMandarinClientJson;
+begin
+  Result := FMandarin;
 end;
 
 end.

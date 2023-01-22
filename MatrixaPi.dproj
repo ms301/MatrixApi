@@ -102,7 +102,6 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="MatrixaPi.pas"/>
-        <DCCReference Include="MatrixaPi.Types.pas"/>
         <DCCReference Include="MatrixaPi.Types.Requests.pas"/>
         <DCCReference Include="MatrixaPi.Types.Response.pas"/>
         <DCCReference Include="MatrixaPi.RoomEvent.RoomMemberContent.pas"/>
@@ -117,6 +116,10 @@
         <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.pas"/>
         <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Room.Joined.pas"/>
         <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.ClientVersion.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Login.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.State.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.Messaging.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

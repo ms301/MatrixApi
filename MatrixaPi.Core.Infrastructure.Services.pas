@@ -9,7 +9,9 @@ uses
   MatrixaPi.Core.Infrastructure.Dto.Room.Create,
   MatrixaPi.Core.Infrastructure.Dto.Sync,
   MatrixaPi.Core.Infrastructure.Dto.Room.Join,
-  MatrixaPi.Core.Infrastructure.Dto.Room.Joined;
+  MatrixaPi.Core.Infrastructure.Dto.Room.Joined,
+  MatrixaPi.Core.Infrastructure.Dto.ClientVersion,
+  MatrixaPi.Core.Infrastructure.Dto.Login;
 
 type
   TBaseApiService = class
@@ -57,7 +59,7 @@ type
     /// <summary> Gets the homeserver’s supported login types to authenticate users.
     /// Clients should pick one of these and supply it as the type when logging in.
     /// </summary>
-    procedure LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
+    procedure LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>; const ABaseAddress: string);
   end;
 
   TEventService = class(TBaseApiService)
@@ -135,11 +137,11 @@ begin
     .Execute(ALoginCallback, FIsSyncMode);
 end;
 
-procedure TUserService.LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>);
+procedure TUserService.LoginFlows(AFlowsCallback: TProc<TmtrLoginFlows, IHTTPResponse>; const ABaseAddress: string);
 begin
   FClient.NewMandarin<TmtrLoginFlows>(API_ENDPOINT_V_3) //
     .SetRequestMethod(sHTTPMethodGet) //
-    .AddUrlSegment('server', BaseAdress) //
+    .AddUrlSegment('server', ABaseAddress) //
     .AddUrlSegment('method', 'login') //
     .Execute(AFlowsCallback, FIsSyncMode);
 end;
@@ -264,6 +266,7 @@ var
 begin
   LMxcUrl := TURI.Create(AMxcUrl);
   FClient.NewMandarin(API_ENDPOINT_V_3_MEDIA + '/{serverName}/{mediaId}') //
+    .AddUrlSegment('server', FBaseAdress)//
     .AddUrlSegment('method', 'download')//
     .AddUrlSegment('serverName', LMxcUrl.Host)//
     .AddUrlSegment('mediaId', LMxcUrl.Path.Substring(1))//

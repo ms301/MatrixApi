@@ -33,7 +33,6 @@ requires
 
 contains
   MatrixaPi in 'MatrixaPi.pas',
-  MatrixaPi.Types in 'MatrixaPi.Types.pas',
   MatrixaPi.Types.Requests in 'MatrixaPi.Types.Requests.pas',
   MatrixaPi.Types.Response in 'MatrixaPi.Types.Response.pas',
   MatrixaPi.RoomEvent.RoomMemberContent in 'MatrixaPi.RoomEvent.RoomMemberContent.pas',
@@ -47,7 +46,11 @@ contains
   MatrixaPi.Core.Infrastructure.Dto.Sync in 'MatrixaPi.Core.Infrastructure.Dto.Sync.pas',
   MatrixaPi.Core.Infrastructure.Dto.Sync.Event in 'MatrixaPi.Core.Infrastructure.Dto.Sync.Event.pas',
   MatrixaPi.Core.Infrastructure.Dto.Room.Joined in 'MatrixaPi.Core.Infrastructure.Dto.Room.Joined.pas',
-  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room in 'MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.pas';
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room in 'MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.pas',
+  MatrixaPi.Core.Infrastructure.Dto.ClientVersion in 'MatrixaPi.Core.Infrastructure.Dto.ClientVersion.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Login in 'MatrixaPi.Core.Infrastructure.Dto.Login.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.State in 'MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.State.pas',
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.Messaging in 'MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.Messaging.pas';
 
 end.
 

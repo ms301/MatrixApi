@@ -34,66 +34,6 @@ type
     property RetryAfterMs: Integer read FRetryAfterMs write FRetryAfterMs;
   end;
 
-  TmtrLoginWellKnowItem = class
-  private
-    [JsonName('base_url')]
-    FBaseUrl: string;
-  public
-    property BaseUrl: string read FBaseUrl write FBaseUrl;
-  end;
-
-  TJsonWellKnowConverter = class(TJsonStringDictionaryConverter<TmtrLoginWellKnowItem>);
-
-  TmtrWelKnown = TObjectDictionary<string, TmtrLoginWellKnowItem>;
-
-  TmtrVersions = class(TmtrError)
-  private type
-    TJsonUnstableFuturesConverter = class(TJsonStringDictionaryConverter<Boolean>);
-  private
-    [JsonName('unstable_features')]
-    [JsonConverter(TJsonUnstableFuturesConverter)]
-    FUnstableFutures: TDictionary<string, Boolean>;
-    [JsonName('versions')]
-    FVersions: TArray<string>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    property UnstableFutures: TDictionary<string, Boolean> read FUnstableFutures;
-    property Versions: TArray<string> read FVersions write FVersions;
-  end;
-
-  TmtrLogin = class(TmtrError)
-  private
-    [JsonName('access_token')]
-    FAccessToken: string;
-    [JsonName('device_id')]
-    FDeviceId: string;
-    [JsonName('expires_in_ms')]
-    FExpiresInMs: Integer;
-    [JsonName('home_server')]
-    FHomeServer: string;
-    [JsonName('refresh_token')]
-    FRefreshToken: string;
-    [JsonName('user_id')]
-    FUserId: string;
-    [JsonName('well_known')]
-    [JsonConverter(TJsonWellKnowConverter)]
-    FWellKnow: TmtrWelKnown;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    property AccessToken: string read FAccessToken write FAccessToken;
-    property DeviceId: string read FDeviceId write FDeviceId;
-    property ExpiresInMs: Integer read FExpiresInMs write FExpiresInMs;
-    property HomeServer: string read FHomeServer write FHomeServer;
-    property RefreshToken: string read FRefreshToken write FRefreshToken;
-    property UserId: string read FUserId write FUserId;
-    property WellKnow: TmtrWelKnown read FWellKnow;
-  end;
-
-
-
-
   TmtrPublicRooms = class(TmtrError)
   type
     TRoom = class
@@ -199,88 +139,7 @@ type
     property Chunk: TObjectList<TmtrPublicRooms.TRoom> read FChunk write FChunk;
   end;
 
-  /// <summary>
-  /// Gets the homeserver’s supported login types to authenticate users. Clients
-  /// should pick one of these and supply it as the type when logging in.
-  /// </summary>
-  TmtrLoginFlows = class(TmtrError)
-  type
-    TIdentityProviders = class
-    private
-      [JsonName('brand')]
-      FBrand: string;
-      [JsonName('icon')]
-      FIcon: string;
-      [JsonName('id')]
-      FID: string;
-      [JsonName('name')]
-      FName: string;
-    public
-      property Brand: string read FBrand write FBrand;
-      property Icon: string read FIcon write FIcon;
-      property ID: string read FID write FID;
-      property Name: string read FName write FName;
-    end;
-
-    TLoginFlow = class
-    private
-      [JsonName('type')]
-      FType: string;
-      [JsonName('identity_providers')]
-      FIdentityProviders: TArray<TIdentityProviders>;
-    public
-
-      constructor Create;
-      destructor Destroy; override;
-      /// <summary>
-      /// The login type. This is supplied as the type when logging in.
-      /// </summary>
-      property &Type: string read FType write FType;
-      property IdentityProviders: TArray<TIdentityProviders> read FIdentityProviders write FIdentityProviders;
-    end;
-  private
-    [JsonName('flows')]
-    FFlows: TArray<TLoginFlow>;
-  public
-
-    constructor Create;
-    destructor Destroy; override;
-
-    /// <summary>
-    /// The homeserver’s supported login types
-    /// </summary>
-    property Flows: TArray<TLoginFlow> read FFlows write FFlows;
-  end;
-
 implementation
-
-{ TmtrLogin }
-constructor TmtrLogin.Create;
-begin
-  inherited Create;
-  FWellKnow := TmtrWelKnown.Create([doOwnsValues]);
-end;
-
-destructor TmtrLogin.Destroy;
-begin
-  FWellKnow.Free;
-  inherited Destroy;
-end;
-
-{ TmtrVersions }
-constructor TmtrVersions.Create;
-begin
-  inherited Create;
-  FUnstableFutures := TDictionary<string, Boolean>.Create();
-end;
-
-destructor TmtrVersions.Destroy;
-begin
-  FUnstableFutures.Free;
-  inherited Destroy;
-end;
-
-
 
 { TmtrPublicRooms }
 constructor TmtrPublicRooms.Create;
@@ -293,34 +152,6 @@ destructor TmtrPublicRooms.Destroy;
 begin
   FChunk.Free;
   inherited Destroy;
-end;
-
-constructor TmtrLoginFlows.Create;
-begin
-  inherited;
-  FFlows := nil;
-end;
-
-destructor TmtrLoginFlows.Destroy;
-begin
-  for var I := Low(FFlows) to High(FFlows) do
-    FFlows[I].Free;
-  FFlows := nil;
-  inherited;
-end;
-
-constructor TmtrLoginFlows.TLoginFlow.Create;
-begin
-  inherited;
-  FIdentityProviders := nil;
-end;
-
-destructor TmtrLoginFlows.TLoginFlow.Destroy;
-begin
-  for var I := Low(FIdentityProviders) to High(FIdentityProviders) do
-    FIdentityProviders[I].Free;
-  FIdentityProviders := nil;
-  inherited;
 end;
 
 end.

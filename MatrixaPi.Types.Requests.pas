@@ -8,68 +8,6 @@ uses
   Citrus.Mandarin;
 
 type
-  TmtxlIdentifierLoginPassword = class
-  private
-    [JsonName('type')]
-    FType: string;
-    [JsonName('user')]
-    FUser: string;
-  public
-    constructor Create(const AUser: string);
-    property &Type: string read FType write FType;
-    property User: string read FUser write FUser;
-  end;
-
-  TmtxlIdentifierLoginEMail = class
-  private
-    [JsonName('type')]
-    FType: string;
-    [JsonName('address')]
-    FAddress: string;
-    [JsonName('medium')]
-    FMedium: string;
-  public
-    constructor Create;
-    property &Type: string read FType write FType;
-    property Address: string read FAddress write FAddress;
-    property Medium: string read FMedium write FMedium;
-  end;
-
-  TmtxlIdentifierLoginPhone = class
-  private
-    [JsonName('type')]
-    FType: string;
-    [JsonName('country')]
-    FCountry: string;
-    [JsonName('number')]
-    FNumber: string;
-    [JsonName('phone')]
-    FPhone: string;
-  public
-    constructor Create;
-    property &Type: string read FType write FType;
-    property Country: string read FCountry write FCountry;
-    property Number: string read FNumber write FNumber;
-    property Phone: string read FPhone write FPhone;
-  end;
-
-  TmtxLoginRequest<T: class> = class
-  private
-    [JsonName('initial_device_display_name')]
-    FInitialDeviceDisplayName: string;
-    [JsonName('identifier')]
-    FIdentifier: T;
-    [JsonName('password')]
-    FPassword: string;
-    [JsonName('type')]
-    FType: string;
-  public
-    constructor Create(AIdentifier: T; const APassword: string);
-    property Identifier: T read FIdentifier write FIdentifier;
-    property InitialDeviceDisplayName: string read FInitialDeviceDisplayName write FInitialDeviceDisplayName;
-    property Password: string read FPassword write FPassword;
-    property &Type: string read FType write FType;
-  end;
 
   TmtxSyncRequest = class(TInterfacedObject, IMandarinBuider)
   public type
@@ -136,22 +74,6 @@ implementation
 
 uses
   System.SysUtils;
-
-constructor TmtxlIdentifierLoginPassword.Create(const AUser: string);
-begin
-  inherited Create;
-  FType := 'm.id.user';
-  FUser := AUser;
-end;
-
-constructor TmtxLoginRequest<T>.Create(AIdentifier: T; const APassword: string);
-begin
-  inherited Create;
-  FIdentifier := AIdentifier;
-  FPassword := APassword;
-  FType := 'm.login.password';
-  FInitialDeviceDisplayName := 'Matrix for Delphi';
-end;
 
 function TmtxSyncRequest.Build: IMandarin;
 begin
@@ -249,19 +171,6 @@ function TmtxPublicRoomRequest.SetThirdPartyInstanceId(const AId: string): TmtxP
 begin
   FMandarin.Body.AddJsonPair('third_party_instance_id', AId);
   Result := Self;
-end;
-
-{ TmtxlIdentifierLoginEMail }
-
-constructor TmtxlIdentifierLoginEMail.Create;
-begin
-  FType := 'm.id.thirdparty';
-end;
-
-{ TmtxlIdentifierLoginPhone }
-constructor TmtxlIdentifierLoginPhone.Create;
-begin
-  FType := 'm.id.phone';
 end;
 
 end.

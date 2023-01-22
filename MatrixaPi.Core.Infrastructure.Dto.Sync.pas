@@ -11,7 +11,7 @@ uses
 
 type
 
-  TmtrTimeline = class
+  TTimeline = class
   private type
     TJsonEventsConverter = class(TJsonListConverter<TRoomEvent>);
   private
@@ -31,44 +31,69 @@ type
   TJoinedRoom = class
   private
     [JsonName('timeline')]
-    FTimeLine: TmtrTimeline;
+    FTimeLine: TTimeline;
   public
     constructor Create;
     destructor Destroy; override;
-    property TimeLine: TmtrTimeline read FTimeLine write FTimeLine;
+    property TimeLine: TTimeline read FTimeLine write FTimeLine;
   end;
 
-  TmtrSyncRoomsInvitedRoom = class
+  TLeftRoom = class
+  private
+    [JsonName('timeline')]
+    FTimeLine: TTimeline;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property TimeLine: TTimeline read FTimeLine write FTimeLine;
+  end;
 
+  TInviteState = class
+  private type
+    TJsonEventsConverter = class(TJsonListConverter<TRoomStrippedState>);
+  private
+    [JsonName('events')]
+    [JsonConverter(TJsonEventsConverter)]
+    FEvents: TObjectList<TRoomStrippedState>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property Events: TObjectList<TRoomStrippedState> read FEvents write FEvents;
+  end;
+
+  TInvitedRoom = class
+  private
+    [JsonName('invite_state')]
+    FInviteState: TInviteState;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property InviteState: TInviteState read FInviteState write FInviteState;
   end;
 
   TmtrSyncRoomsKnockedRoom = class
 
   end;
 
-  TmtrSyncRoomsLeftRoom = class
-
-  end;
-
   TRooms = class
   private type
     TJsonSyncRoomsJoined = class(TJsonStringDictionaryConverter<TJoinedRoom>);
-    TJsonSyncRoomsInvited = class(TJsonStringDictionaryConverter<TmtrSyncRoomsInvitedRoom>);
+    TJsonSyncRoomsInvited = class(TJsonStringDictionaryConverter<TInvitedRoom>);
     TJsonSyncRoomsKnocked = class(TJsonStringDictionaryConverter<TmtrSyncRoomsKnockedRoom>);
-    TJsonSyncRoomsLeft = class(TJsonStringDictionaryConverter<TmtrSyncRoomsLeftRoom>);
+    TJsonSyncRoomsLeft = class(TJsonStringDictionaryConverter<TLeftRoom>);
   private
     [JsonName('join')]
     [JsonConverter(TJsonSyncRoomsJoined)]
     FJoin: TObjectDictionary<string, TJoinedRoom>;
     [JsonName('invite')]
     [JsonConverter(TJsonSyncRoomsInvited)]
-    FInvite: TObjectDictionary<string, TmtrSyncRoomsInvitedRoom>;
+    FInvite: TObjectDictionary<string, TInvitedRoom>;
     [JsonName('knock')]
     [JsonConverter(TJsonSyncRoomsKnocked)]
     FKnock: TObjectDictionary<string, TmtrSyncRoomsKnockedRoom>;
     [JsonName('leave')]
     [JsonConverter(TJsonSyncRoomsLeft)]
-    FLeave: TObjectDictionary<string, TmtrSyncRoomsLeftRoom>;
+    FLeave: TObjectDictionary<string, TLeftRoom>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -76,7 +101,7 @@ type
     /// The rooms that the user has been invited to, mapped as room ID to room
     /// information.
     /// </summary>
-    property Invite: TObjectDictionary<string, TmtrSyncRoomsInvitedRoom> read FInvite write FInvite;
+    property Invite: TObjectDictionary<string, TInvitedRoom> read FInvite write FInvite;
     /// <remarks>
     /// The rooms that the user has joined, mapped as room ID to room information.
     /// </remarks>
@@ -89,7 +114,7 @@ type
     /// The rooms that the user has left or been banned from, mapped as room ID to room
     /// information.
     /// </summary>
-    property Leave: TObjectDictionary<string, TmtrSyncRoomsLeftRoom> read FLeave write FLeave;
+    property Leave: TObjectDictionary<string, TLeftRoom> read FLeave write FLeave;
   end;
 
   /// <summary>
@@ -135,9 +160,9 @@ constructor TRooms.Create;
 begin
   inherited Create;
   FJoin := TObjectDictionary<string, TJoinedRoom>.Create([doOwnsValues]);
-  FInvite := TObjectDictionary<string, TmtrSyncRoomsInvitedRoom>.Create([doOwnsValues]);
+  FInvite := TObjectDictionary<string, TInvitedRoom>.Create([doOwnsValues]);
   FKnock := TObjectDictionary<string, TmtrSyncRoomsKnockedRoom>.Create([doOwnsValues]);
-  FLeave := TObjectDictionary<string, TmtrSyncRoomsLeftRoom>.Create([doOwnsValues]);
+  FLeave := TObjectDictionary<string, TLeftRoom>.Create([doOwnsValues]);
 end;
 
 destructor TRooms.Destroy;
@@ -149,14 +174,14 @@ begin
   inherited Destroy;
 end;
 
-{ TmtrTimeline }
-constructor TmtrTimeline.Create;
+{ TTimeline }
+constructor TTimeline.Create;
 begin
   inherited Create;
   FEvents := TObjectList<TRoomEvent>.Create();
 end;
 
-destructor TmtrTimeline.Destroy;
+destructor TTimeline.Destroy;
 begin
   FEvents.Free;
   inherited Destroy;
@@ -166,13 +191,52 @@ end;
 constructor TJoinedRoom.Create;
 begin
   inherited Create;
-  FTimeLine := TmtrTimeline.Create();
+  FTimeLine := TTimeline.Create();
 end;
 
 destructor TJoinedRoom.Destroy;
 begin
   FTimeLine.Free;
   inherited Destroy;
+end;
+
+{ TLeftRoom }
+
+constructor TLeftRoom.Create;
+begin
+  inherited Create;
+  FTimeLine := TTimeline.Create();
+end;
+
+destructor TLeftRoom.Destroy;
+begin
+  FTimeLine.Free;
+  inherited Destroy;
+end;
+
+constructor TInvitedRoom.Create;
+begin
+  inherited Create;
+  FInviteState := TInviteState.Create();
+end;
+
+destructor TInvitedRoom.Destroy;
+begin
+  FInviteState.Free;
+  inherited Destroy;
+end;
+
+{ TInviteState }
+
+constructor TInviteState.Create;
+begin
+  FEvents := TObjectList<TRoomStrippedState>.Create();
+end;
+
+destructor TInviteState.Destroy;
+begin
+  FEvents.Free;
+  inherited;
 end;
 
 end.

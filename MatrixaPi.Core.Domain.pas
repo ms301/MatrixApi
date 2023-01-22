@@ -5,7 +5,6 @@ interface
 uses
   MatrixaPi.Core.Domain.MatrixRoom,
   MatrixaPi.Types.Response,
-  MatrixaPi.Types,
   System.Generics.Collections,
   MatrixaPi.Core.Domain.RoomEvent,
   MatrixaPi.Core.Infrastructure.Dto.Sync;
@@ -16,6 +15,7 @@ type
     TFactory = class
     strict private
       class var FMatrixRoomFactory: TMatrixRoomFactory;
+      class var FMatrixRoomEventFactory: TMatrixRoomEventFactory;
       class constructor Create;
       class destructor Destroy;
 
@@ -24,6 +24,7 @@ type
       class function GetMatrixEventsFromSync(ARooms: TRooms): TObjectList<TBaseRoomEvent>;
       class function GetMatrixRoomsFromSync(ARooms: TRooms): TObjectList<TMatrixRoom>;
       class property MatrixRoomFactory: TMatrixRoomFactory read FMatrixRoomFactory;
+      class property MatrixRoomEventFactory: TMatrixRoomEventFactory read FMatrixRoomEventFactory;
     end;
   private
     FNextBatch: string;
@@ -52,11 +53,13 @@ end;
 class constructor TSyncBatch.TFactory.Create;
 begin
   FMatrixRoomFactory := TMatrixRoomFactory.Create();
+  FMatrixRoomEventFactory := TMatrixRoomEventFactory.Create();
 end;
 
 class destructor TSyncBatch.TFactory.Destroy;
 begin
   FMatrixRoomFactory.Free;
+  FMatrixRoomEventFactory.Free;
 end;
 
 class function TSyncBatch.TFactory.CreateFromSync(const ANextBatch: string; ARooms: TRooms): TSyncBatch;
@@ -71,26 +74,36 @@ end;
 
 class function TSyncBatch.TFactory.GetMatrixEventsFromSync(ARooms: TRooms): TObjectList<TBaseRoomEvent>;
 begin
-  Result := nil;
-  // TODO -cMM: TSyncBatch.TFactory.GetMatrixEventsFromSync default body inserted
+  Result := TObjectList<TBaseRoomEvent>.Create;
+  for var LPair in ARooms.Join do
+  begin
+    Result.AddRange(MatrixRoomEventFactory.CreateFromJoined(LPair.Key, LPair.Value));
+  end;
+  for var LPair in ARooms.Invite do
+  begin
+    Result.AddRange(MatrixRoomEventFactory.CreateFromInvited(LPair.Key, LPair.Value));
+  end;
+  for var LPair in ARooms.Leave do
+  begin
+    Result.AddRange(MatrixRoomEventFactory.CreateFromLeft(LPair.Key, LPair.Value));
+  end;
 end;
 
 class function TSyncBatch.TFactory.GetMatrixRoomsFromSync(ARooms: TRooms): TObjectList<TMatrixRoom>;
 begin
-  Result := nil;
-  // var
-  //  joinedMatrixRooms =
-  for var LItem in ARooms.Join do
+  Result := TObjectList<TMatrixRoom>.Create;
+  for var LPair in ARooms.Join do
   begin
-    MatrixRoomFactory.CreateJoined(LItem.Key, LItem.Value);
+    Result.AddRange(MatrixRoomFactory.CreateJoined(LPair.Key, LPair.Value));
   end;
-  // .ToList();
-  // var invitedMatrixRooms = rooms.Invite
-  // .Select(pair => MatrixRoomFactory.CreateInvite(pair.Key, pair.Value)).ToList();
-  // var leftMatrixRooms = rooms.Leave.Select(pair => MatrixRoomFactory.CreateLeft(pair.Key, pair.Value))
-  // .ToList();
-  //
-  // return joinedMatrixRooms.Concat(invitedMatrixRooms).Concat(leftMatrixRooms).ToList();
+  for var LPair in ARooms.Invite do
+  begin
+    Result.AddRange(MatrixRoomFactory.CreateInvite(LPair.Key, LPair.Value));
+  end;
+  for var LPair in ARooms.Leave do
+  begin
+    Result.AddRange(MatrixRoomFactory.CreateLeft(LPair.Key, LPair.Value));
+  end;
 end;
 
 end.

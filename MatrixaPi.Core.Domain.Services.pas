@@ -3,7 +3,7 @@
 interface
 
 uses
-  FMX.Types,
+  Citrus.ThreadTimer,
   MatrixaPi.Core.Domain,
   MatrixaPi.Core.Domain.MatrixRoom,
   System.SysUtils,
@@ -39,7 +39,7 @@ type
   TPollingService = class(TInterfacedObject, IPollingService)
   private
     FEventService: TEventService;
-    FTimer: TTimer;
+    FTimer: TThreadTimer;
     FAccessToken: string;
     FOnSyncBatchReceived: TProc<TObject, TSyncBatch>;
     FNextBath: string;
@@ -53,11 +53,12 @@ type
     function GetJoinedRooms: TArray<TMatrixRoom>;
     function GetLeftRooms: TArray<TMatrixRoom>;
   protected
-    procedure DoTimer(AObject: TObject);
+    procedure DoTimer;
     procedure RefreshRooms(AMatrixRooms: TObjectList<TMatrixRoom>);
     function GetRoomsByStatus(const ARoomStatus: TMatrixRoomStatus): TArray<TMatrixRoom>;
   public
     constructor Create(AEventService: TEventService);
+
     function GetMatrixRoom(const ARoomId: string): TMatrixRoom;
     procedure Start(const ANextBath: string = '');
     procedure Stop;
@@ -74,6 +75,7 @@ type
 implementation
 
 uses
+  System.Classes,
   MatrixaPi.Types.Response,
   Citrus.Mandarin,
   MatrixaPi.Core.Infrastructure.Dto.Sync;
@@ -82,20 +84,21 @@ constructor TPollingService.Create(AEventService: TEventService);
 begin
   inherited Create;
   FEventService := AEventService;
-  FTimer := TTimer.Create(nil);
-  FTimer.OnTimer := DoTimer;
-  FTimer.Interval := 0;
+  FTimer := TThreadTimer.Create(DoTimer);
+  FMatrixRooms := TObjectDictionary<string, TMatrixRoom>.Create();
 end;
 
 destructor TPollingService.Destroy;
 begin
+  FMatrixRooms.Free;
+  Stop;
   FTimer.Free;
   inherited;
 end;
 
-procedure TPollingService.DoTimer(AObject: TObject);
+procedure TPollingService.DoTimer;
 begin
-  FTimer.Enabled := False;
+  FTimer.Interval := Int64.MaxValue;
   FIsSyncing := True;
   FEventService.Sync(
     procedure(ASync: TSyncResponse; AHttpResp: IHTTPResponse)
@@ -103,10 +106,18 @@ begin
       LSyncBath: TSyncBatch;
     begin
       LSyncBath := TSyncBatch.TFactory.CreateFromSync(ASync.NextBatch, ASync.Rooms);
-      FNextBath := LSyncBath.NextBatch;
-      FTimeOut := 30000;
-      RefreshRooms(LSyncBath.MatrixRooms);
-      FTimer.Enabled := True;
+      try
+        FNextBath := LSyncBath.NextBatch;
+        FTimeOut := 30000;
+
+        RefreshRooms(LSyncBath.MatrixRooms);
+        if Assigned(FOnSyncBatchReceived) then
+          FOnSyncBatchReceived(Self, LSyncBath);
+        FTimer.Start;
+      finally
+        LSyncBath.Free;
+        ASync.Free;
+      end;
     end, 0, FNextBath);
 
 end;
@@ -168,6 +179,7 @@ var
   LRetrivedRoom: TMatrixRoom;
 begin
   for var LRoom in AMatrixRooms do
+  begin
     if not FMatrixRooms.TryGetValue(LRoom.Id, LRetrivedRoom) then
     begin
       if not FMatrixRooms.TryAdd(LRoom.Id, LRoom) then
@@ -178,6 +190,7 @@ begin
       LRetrivedRoom.JoinedUserIds.AddRange(LRoom.JoinedUserIds);
       LRetrivedRoom.Status := LRoom.Status;
     end;
+  end;
 end;
 
 procedure TPollingService.SetOnSyncBatchReceived(const Value: TProc<TObject, TSyncBatch>);
@@ -191,12 +204,12 @@ begin
     raise EArgumentNilException.Create('Call Init first.');
   if not ANextBath.IsEmpty then
     FNextBath := ANextBath;
-  FTimer.Enabled := True;
+  FTimer.Start;
 end;
 
 procedure TPollingService.Stop;
 begin
-  FTimer.Enabled := False;
+  FTimer.Stop;
   FIsSyncing := False;
 end;
 

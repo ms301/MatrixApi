@@ -4,10 +4,18 @@ interface
 
 uses
   System.JSON,
-  MatrixaPi.Core.Infrastructure.Dto.Sync.Event,
-  System.JSON.Serializers;
+  System.JSON.Serializers,
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event;
 
 type
+  TRoomStrippedState = class(TBaseEvent)
+  private
+    [JsonName('sender')]
+    FSender: string;
+  public
+    property Sender: string read FSender write FSender;
+  end;
+
   TRoomEvent = class(TBaseEvent)
   private
     [JsonName('event_id')]
