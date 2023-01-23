@@ -94,15 +94,15 @@ begin
   Result := TObjectList<TMatrixRoom>.Create;
   for var LPair in ARooms.Join do
   begin
-    Result.AddRange(MatrixRoomFactory.CreateJoined(LPair.Key, LPair.Value));
+    Result.Add(MatrixRoomFactory.CreateJoined(LPair.Key, LPair.Value));
   end;
   for var LPair in ARooms.Invite do
   begin
-    Result.AddRange(MatrixRoomFactory.CreateInvite(LPair.Key, LPair.Value));
+    Result.Add(MatrixRoomFactory.CreateInvite(LPair.Key, LPair.Value));
   end;
   for var LPair in ARooms.Leave do
   begin
-    Result.AddRange(MatrixRoomFactory.CreateLeft(LPair.Key, LPair.Value));
+    Result.Add(MatrixRoomFactory.CreateLeft(LPair.Key, LPair.Value));
   end;
 end;
 

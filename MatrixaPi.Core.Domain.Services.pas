@@ -46,6 +46,7 @@ type
     FIsSyncing: Boolean;
     FTimeOut: Cardinal;
     FMatrixRooms: TObjectDictionary<string, TMatrixRoom>;
+    FOnRoomsUpdated: TProc;
     function GetIsSyncing: Boolean;
     function GetOnSyncBatchReceived: TProc<TObject, TSyncBatch>;
     procedure SetOnSyncBatchReceived(const Value: TProc<TObject, TSyncBatch>);
@@ -66,6 +67,7 @@ type
     destructor Destroy; override;
     property IsSyncing: Boolean read GetIsSyncing write FIsSyncing;
     property OnSyncBatchReceived: TProc<TObject, TSyncBatch> read GetOnSyncBatchReceived write SetOnSyncBatchReceived;
+    property OnRoomsUpdated: TProc read FOnRoomsUpdated write FOnRoomsUpdated;
     property InvitedRooms: TArray<TMatrixRoom> read GetInvitedRooms;
     property JoinedRooms: TArray<TMatrixRoom> read GetJoinedRooms;
     property LeftRooms: TArray<TMatrixRoom> read GetLeftRooms;
@@ -188,8 +190,11 @@ begin
     begin
       LRetrivedRoom.JoinedUserIds.AddRange(LRoom.JoinedUserIds);
       LRetrivedRoom.Status := LRoom.Status;
+      LRetrivedRoom.Name := LRoom.Name;
     end;
   end;
+  if Assigned(FOnRoomsUpdated) then
+    FOnRoomsUpdated();
 end;
 
 procedure TPollingService.SetOnSyncBatchReceived(const Value: TProc<TObject, TSyncBatch>);

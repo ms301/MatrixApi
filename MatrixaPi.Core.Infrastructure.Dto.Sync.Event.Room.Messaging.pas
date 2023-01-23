@@ -2,12 +2,17 @@
 
 interface
 
+uses
+  System.JSON.Serializers;
+
 type
   TMessageType = (Text, Unknown);
 
   TMessageContent = class
   private
+    [JsonName('body')]
     FBody: string;
+    [JsonName('msgtype')]
     FMsgType: string;
   public
     property Body: string read FBody write FBody;

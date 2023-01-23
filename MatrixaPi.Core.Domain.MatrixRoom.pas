@@ -23,7 +23,7 @@ type
   public
     constructor Create(const AId: string; const AStatus: TMatrixRoomStatus; AJoinedUserIds: TArray<string>); overload;
     constructor Create(const AId: string; const AStatus: TMatrixRoomStatus); overload;
-    constructor Create; overload;
+    constructor Create(const AStatus: TMatrixRoomStatus); overload;
     destructor Destroy; override;
 
     property Id: string read FId write FId;
@@ -56,6 +56,7 @@ var
   LCreateRoomEvent: TCreateRoomEvent;
   LInviteToRoomEvent: TInviteToRoomEvent;
   LTextMessageEvent: TTextMessageEvent;
+  LTopic: TTopicRoomEvent;
 begin
   Result := TObjectList<TBaseRoomEvent>.Create;
   for var LInviteStateEvent in AInvitedRoom.InviteState.Events do
@@ -66,6 +67,8 @@ begin
       Result.Add(LCreateRoomEvent)
     else if TInviteToRoomEvent.Factory.TryCreateFromStrippedState(LInviteStateEvent, ARoomId, LInviteToRoomEvent) then
       Result.Add(LInviteToRoomEvent)
+      //    else if TTopicRoomEvent.Factory.TryCreateFrom(LTimelineEvent, ARoomId, LTopic) then
+      //      Result.Add(LTopic)
     else if TTextMessageEvent.Factory.TryCreateFromStrippedState(LInviteStateEvent, ARoomId, LTextMessageEvent) then
       Result.Add(LTextMessageEvent);
   end;
@@ -79,6 +82,7 @@ var
   LInviteToRoomEvent: TInviteToRoomEvent;
   LTextMessageEvent: TTextMessageEvent;
   LNameRoomEvent: TNameRoomEvent;
+  LTopic: TTopicRoomEvent;
 begin
   Result := TObjectList<TBaseRoomEvent>.Create;
   for var LTimelineEvent in AJoinedRoom.TimeLine.Events do
@@ -91,6 +95,10 @@ begin
       Result.Add(LInviteToRoomEvent)
     else if TTextMessageEvent.Factory.TryCreateFrom(LTimelineEvent, ARoomId, LTextMessageEvent) then
       Result.Add(LTextMessageEvent)
+
+    else if TTopicRoomEvent.Factory.TryCreateFrom(LTimelineEvent, ARoomId, LTopic) then
+      Result.Add(LTopic)
+
     else if TNameRoomEvent.Factory.TryCreateFrom(LTimelineEvent, ARoomId, LNameRoomEvent) then
       Result.Add(LNameRoomEvent);
   end;
@@ -142,7 +150,7 @@ var
   LJoinRoomEvent: TJoinRoomEvent;
   LNameRoomEvent: TNameRoomEvent;
 begin
-  Result := TMatrixRoom.Create;
+  Result := TMatrixRoom.Create(ARoomId, TMatrixRoomStatus.Joined);
   for var LTimelineEvent in AJoinedRoom.TimeLine.Events do
   begin
     if TJoinRoomEvent.Factory.TryCreateFrom(LTimelineEvent, ARoomId, LJoinRoomEvent) then
@@ -191,9 +199,9 @@ begin
   Create(AId, AStatus, nil);
 end;
 
-constructor TMatrixRoom.Create;
+constructor TMatrixRoom.Create(const AStatus: TMatrixRoomStatus);
 begin
-  Create(string.empty, TMatrixRoomStatus.Unknown);
+  Create(string.empty, AStatus);
 end;
 
 destructor TMatrixRoom.Destroy;

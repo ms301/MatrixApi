@@ -18,7 +18,8 @@ type
     Member, //
     PowerLevels, //
     Message, //
-    Name//
+    Name, //
+    Topic//
     );
 {$SCOPEDENUMS OFF}
 
@@ -71,6 +72,10 @@ begin
     Result := TEventType.PowerLevels
   else if FType = 'm.room.message' then
     Result := TEventType.Message
+  else if FType = 'm.room.name' then
+    Result := TEventType.Name
+  else if FType = 'm.room.topic' then
+    Result := TEventType.Topic
   else
     Result := TEventType.Unknown;
 end;

@@ -73,6 +73,19 @@ type
     property Name: string read FName write FName;
   end;
 
+  TTopicRoomEvent = class(TBaseRoomEvent)
+  public type
+    Factory = class
+      class function TryCreateFrom(ARoomEvent: TRoomEvent; ARoomId: string;
+        out ATopicRoomEvent: TTopicRoomEvent): Boolean;
+    end;
+  private
+    FTopic: string;
+  public
+    constructor Create(const ARoomId, ASenderUserId, ATopic: string); reintroduce;
+    property Topic: string read FTopic write FTopic;
+  end;
+
   TTextMessageEvent = class(TBaseRoomEvent)
   private
     FMessage: string;
@@ -95,7 +108,8 @@ uses
   MatrixaPi.RoomEvent.RoomMemberContent,
   MatrixaPi.Core.Infrastructure.Dto.Sync.Event,
   MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.State,
-  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.Messaging;
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.Messaging,
+  MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.Topic;
 
 {TBaseRoomEvent}
 constructor TBaseRoomEvent.Create(const ARoomId, ASenderUserId: string);
@@ -111,7 +125,6 @@ class function TJoinRoomEvent.Factory.TryCreateFrom(ARoomEvent: TRoomEvent; cons
 var
   LContent: TRoomMemberContent;
 begin
-  WriteLn(ARoomEvent.Content.ToJson);
   LContent := ARoomEvent.Content.ToObject<TRoomMemberContent>;
   try
     Result := (ARoomEvent.EventType = TEventType.Member) and (LContent.Membership = TUserMembershipState.Join);
@@ -302,6 +315,31 @@ constructor TNameRoomEvent.Create(const ARoomId, ASenderUserId, AName: string);
 begin
   inherited Create(ARoomId, ASenderUserId);
   FName := AName;
+end;
+
+{ TTopicRoomEvent }
+
+constructor TTopicRoomEvent.Create(const ARoomId, ASenderUserId, ATopic: string);
+begin
+  inherited Create(ARoomId, ASenderUserId);
+  FTopic := ATopic;
+end;
+
+{ TTopicRoomEvent.Factory }
+
+class function TTopicRoomEvent.Factory.TryCreateFrom(ARoomEvent: TRoomEvent; ARoomId: string;
+  out ATopicRoomEvent: TTopicRoomEvent): Boolean;
+var
+  LContent: TTopicContent;
+begin
+  LContent := ARoomEvent.Content.ToObject<TTopicContent>;
+  try
+    Result := (ARoomEvent.EventType = TEventType.Topic) and Assigned(LContent);
+    if Result then
+      ATopicRoomEvent := TTopicRoomEvent.Create(ARoomId, ARoomEvent.Sender, LContent.Topic);
+  finally
+    LContent.Free;
+  end;
 end;
 
 end.

@@ -145,7 +145,6 @@ type
     /// </remarks>
     procedure PublicRooms(APublicRoomsCallback: TProc<TmtrPublicRooms, IHTTPResponse>;
       APublicRoomBuilder: IMandarinBuider); overload;
-
     /// <summary>
     /// Create a new room
     /// </summary>

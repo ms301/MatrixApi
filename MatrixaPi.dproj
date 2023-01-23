@@ -120,6 +120,7 @@
         <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Login.pas"/>
         <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.State.pas"/>
         <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.Messaging.pas"/>
+        <DCCReference Include="MatrixaPi.Core.Infrastructure.Dto.Sync.Event.Room.Topic.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
