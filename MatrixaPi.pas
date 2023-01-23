@@ -357,6 +357,7 @@ constructor TMatrixClientFactory.Create;
 begin
   inherited Create;
   FMandarin := TMandarinClientJson.Create;
+  FMandarin.Http.ConnectionTimeout := 120 * 1000; //120 sec
   FMandarin.OnBeforeExcecute := procedure(AMandarin: IMandarin)
     begin
       AMandarin.AddHeader('Content-Type', 'application/json');
@@ -388,8 +389,12 @@ end;
 
 destructor TMatrixClientFactory.Destroy;
 begin
-  FMandarin.Free;
+  FEventService.Free;
+  FUserService.Free;
+  FRoomService.Free;
+ // FPollingService.Free;
   FModulesService.Free;
+  FMandarin.Free;
   inherited Destroy;
 end;
 

@@ -142,6 +142,9 @@ type
 
 implementation
 
+uses
+  System.SysUtils;
+
 { TSyncResponse }
 constructor TSyncResponse.Create;
 begin
@@ -151,7 +154,7 @@ end;
 
 destructor TSyncResponse.Destroy;
 begin
-  FRooms.Free;
+  FreeAndNil(FRooms);
   inherited Destroy;
 end;
 

@@ -42,6 +42,14 @@ type
     property RoomType: string read FRoomType write FRoomType;
   end;
 
+  TRoomNameContent = class
+  private
+    [JsonName('name')]
+    FName: string;
+  published
+    property Name: string read FName write FName;
+  end;
+
 implementation
 
 constructor TRoomCreateContent.Create;

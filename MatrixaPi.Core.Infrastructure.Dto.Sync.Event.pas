@@ -11,7 +11,15 @@ uses
 
 type
 {$SCOPEDENUMS ON}
-  TEventType = (Unknown, Create, Member, Message);
+  TEventType = (Unknown, //
+    CanonicalAlias, //
+    Create, //
+    JoinRules, //
+    Member, //
+    PowerLevels, //
+    Message, //
+    Name//
+    );
 {$SCOPEDENUMS OFF}
 
   TBaseEvent = class
@@ -51,10 +59,16 @@ end;
 
 function TBaseEvent.GetEventType: TEventType;
 begin
-  if FType = 'm.room.create' then
+  if FType = 'm.room.canonical_alias' then
+    Result := TEventType.CanonicalAlias
+  else if FType = 'm.room.create' then
     Result := TEventType.Create
+  else if FType = 'm.room.join_rules' then
+    Result := TEventType.JoinRules
   else if FType = 'm.room.member' then
     Result := TEventType.Member
+  else if FType = 'm.room.power_levels' then
+    Result := TEventType.PowerLevels
   else if FType = 'm.room.message' then
     Result := TEventType.Message
   else

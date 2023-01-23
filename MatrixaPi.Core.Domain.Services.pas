@@ -119,7 +119,6 @@ begin
         ASync.Free;
       end;
     end, 0, FNextBath);
-
 end;
 
 function TPollingService.GetIsSyncing: Boolean;

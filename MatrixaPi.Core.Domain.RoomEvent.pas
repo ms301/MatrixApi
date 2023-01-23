@@ -60,6 +60,19 @@ type
     constructor Create(const ARoomId: string; const ASenderUserId: string); override;
   end;
 
+  TNameRoomEvent = class(TBaseRoomEvent)
+  public type
+    Factory = class
+      class function TryCreateFrom(ARoomEvent: TRoomEvent; ARoomId: string; out ANameRoomEvent: TNameRoomEvent)
+        : Boolean;
+    end;
+  private
+    FName: string;
+  public
+    constructor Create(const ARoomId, ASenderUserId, AName: string); reintroduce;
+    property Name: string read FName write FName;
+  end;
+
   TTextMessageEvent = class(TBaseRoomEvent)
   private
     FMessage: string;
@@ -98,10 +111,10 @@ class function TJoinRoomEvent.Factory.TryCreateFrom(ARoomEvent: TRoomEvent; cons
 var
   LContent: TRoomMemberContent;
 begin
+  WriteLn(ARoomEvent.Content.ToJson);
   LContent := ARoomEvent.Content.ToObject<TRoomMemberContent>;
   try
-    Result := Result and (ARoomEvent.EventType = TEventType.Member) and
-      (LContent.Membership = TUserMembershipState.Join);
+    Result := (ARoomEvent.EventType = TEventType.Member) and (LContent.Membership = TUserMembershipState.Join);
     if Result then
       AJoinRoomEvent := TJoinRoomEvent.Create(ARoomId, ARoomEvent.Sender)
     else
@@ -131,15 +144,12 @@ var
   LContent: TRoomCreateContent;
 begin
   LContent := ARoomEvent.Content.ToObject<TRoomCreateContent>;
-  if (ARoomEvent.EventType = TEventType.Create) and Assigned(LContent) then
-  begin
-    ACreateRoomEvent := TCreateRoomEvent.Create(ARoomId, ARoomEvent.Sender, LContent.Creator);
-    Result := True;
-  end
-  else
-  begin
-    ACreateRoomEvent := nil;
-    Result := False;
+  try
+    Result := (ARoomEvent.EventType = TEventType.Create) and Assigned(LContent);
+    if Result then
+      ACreateRoomEvent := TCreateRoomEvent.Create(ARoomId, ARoomEvent.Sender, LContent.Creator);
+  finally
+    LContent.Free;
   end;
 end;
 
@@ -149,15 +159,12 @@ var
   LContent: TRoomCreateContent;
 begin
   LContent := ARoomStrippedState.Content.ToObject<TRoomCreateContent>;
-  if (ARoomStrippedState.EventType = TEventType.Create) and Assigned(LContent) then
-  begin
-    ACreateRoomEvent := TCreateRoomEvent.Create(ARoomId, ARoomStrippedState.Sender, LContent.Creator);
-    Result := True;
-  end
-  else
-  begin
-    ACreateRoomEvent := nil;
-    Result := False;
+  try
+    Result := (ARoomStrippedState.EventType = TEventType.Create) and Assigned(LContent);
+    if Result then
+      ACreateRoomEvent := TCreateRoomEvent.Create(ARoomId, ARoomStrippedState.Sender, LContent.Creator);
+  finally
+    LContent.Free;
   end;
 end;
 
@@ -176,15 +183,19 @@ var
   LContent: TRoomMemberContent;
 begin
   LContent := ARoomEvent.Content.ToObject<TRoomMemberContent>;
-  if (ARoomEvent.EventType = TEventType.Member) and (LContent.Membership = TUserMembershipState.Invite) then
-  begin
-    AInviteToRoomEvent := TInviteToRoomEvent.Create(ARoomId, ARoomEvent.Sender);
-    Result := True;
-  end
-  else
-  begin
-    AInviteToRoomEvent := nil;
-    Result := False;
+  try
+    if (ARoomEvent.EventType = TEventType.Member) and (LContent.Membership = TUserMembershipState.Invite) then
+    begin
+      AInviteToRoomEvent := TInviteToRoomEvent.Create(ARoomId, ARoomEvent.Sender);
+      Result := True;
+    end
+    else
+    begin
+      AInviteToRoomEvent := nil;
+      Result := False;
+    end;
+  finally
+    LContent.Free;
   end;
 end;
 
@@ -194,15 +205,19 @@ var
   LContent: TRoomMemberContent;
 begin
   LContent := ARoomStrippedState.Content.ToObject<TRoomMemberContent>;
-  if (ARoomStrippedState.EventType = TEventType.Member) and (LContent.Membership = TUserMembershipState.Invite) then
-  begin
-    AInviteToRoomEvent := TInviteToRoomEvent.Create(ARoomId, ARoomStrippedState.Sender);
-    Result := True;
-  end
-  else
-  begin
-    AInviteToRoomEvent := nil;
-    Result := False;
+  try
+    if (ARoomStrippedState.EventType = TEventType.Member) and (LContent.Membership = TUserMembershipState.Invite) then
+    begin
+      AInviteToRoomEvent := TInviteToRoomEvent.Create(ARoomId, ARoomStrippedState.Sender);
+      Result := True;
+    end
+    else
+    begin
+      AInviteToRoomEvent := nil;
+      Result := False;
+    end;
+  finally
+    LContent.Free;
   end;
 end;
 
@@ -257,17 +272,36 @@ var
   LContent: TMessageContent;
 begin
   LContent := ARoomStrippedState.Content.ToObject<TMessageContent>;
-  if (ARoomStrippedState.EventType = TEventType.Message) and (LContent.&Type = TMessageType.Text) then
-  begin
-    ATextMessageEvent := TTextMessageEvent.Create(ARoomId, ARoomStrippedState.Sender, LContent.Body);
-    Result := True;
-  end
-  else
-  begin
-    ATextMessageEvent := nil;
-    Result := False;
+  try
+    Result := (ARoomStrippedState.EventType = TEventType.Message) and (LContent.&Type = TMessageType.Text);
+    if Result then
+      ATextMessageEvent := TTextMessageEvent.Create(ARoomId, ARoomStrippedState.Sender, LContent.Body);
+  finally
+    LContent.Free;
   end;
+end;
 
+{ TNameRoomEvent.Factory }
+
+class function TNameRoomEvent.Factory.TryCreateFrom(ARoomEvent: TRoomEvent; ARoomId: string;
+  out ANameRoomEvent: TNameRoomEvent): Boolean;
+var
+  LContent: TRoomNameContent;
+begin
+  LContent := ARoomEvent.Content.ToObject<TRoomNameContent>;
+  try
+    Result := (ARoomEvent.EventType = TEventType.Name) and Assigned(LContent);
+    if Result then
+      ANameRoomEvent := TNameRoomEvent.Create(ARoomId, ARoomEvent.Sender, LContent.Name);
+  finally
+    LContent.Free;
+  end;
+end;
+
+constructor TNameRoomEvent.Create(const ARoomId, ASenderUserId, AName: string);
+begin
+  inherited Create(ARoomId, ASenderUserId);
+  FName := AName;
 end;
 
 end.
